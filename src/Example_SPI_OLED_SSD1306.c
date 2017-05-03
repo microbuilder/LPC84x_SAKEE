@@ -10,6 +10,7 @@
 
 #include <cr_section_macros.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "LPC8xx.h"
 #include "core_cm0plus.h"
