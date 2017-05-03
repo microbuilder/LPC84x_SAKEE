@@ -15,7 +15,9 @@
 #define DMA_BUFFER_SIZE 1024
 
 void adc_dma_init(void);
-void adc_dma_start(void);
 void adc_dma_set_rate(uint32_t period_us);
+
+void adc_dma_start(void);
+void adc_dma_stop(void);
 
 #endif /* ADC_DMA_H_ */

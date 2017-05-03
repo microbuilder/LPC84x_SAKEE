@@ -113,34 +113,8 @@ void adc_dma_init(void)
   // Use ADC Seq A to trigger DMA0
   LPC_DMATRIGMUX->DMA_ITRIG_INMUX0 = 0;
 
-  // Config transfer
-  uint32_t xfercfg = 1<<DMA_XFERCFG_CFGVALID |
-                     //1<<DMA_XFERCFG_CLRTRIG  |
-                     1<<DMA_XFERCFG_SETINTA  |
-                     0<<DMA_XFERCFG_SETINTB  |
-                     1<<DMA_XFERCFG_WIDTH    | // 16 bit of ADC value
-                     0<<DMA_XFERCFG_SRCINC   | // TODO multiple ADC
-                     1<<DMA_XFERCFG_DSTINC   |
-                     (DMA_BUFFER_SIZE-1) << DMA_XFERCFG_XFERCOUNT; // TODO multiple ADC
-
   // Enable the DMA interrupt in the NVIC
   NVIC_EnableIRQ(DMA_IRQn);
-
-  // Set the valid bit for channel 0 in the SETVALID register
-  LPC_DMA->SETVALID0 = 1<<0;
-
-  // Channel Descriptor
-  dma2ndDesc.xfercfg = xfercfg;
-  dma2ndDesc.source  = (uint32_t) &LPC_ADC->DAT[_channel];
-  dma2ndDesc.dest    = (uint32_t) &adc_buffer[2*DMA_BUFFER_SIZE-1];
-  dma2ndDesc.next    = 0;
-
-  Chan_Desc_Table[0].source = (uint32_t) &LPC_ADC->DAT[_channel];
-  Chan_Desc_Table[0].dest   = (uint32_t) &adc_buffer[DMA_BUFFER_SIZE-1];
-  Chan_Desc_Table[0].next   = (uint32_t) &dma2ndDesc;
-
-  // Reload bit for multiple descriptor since we need buffer > 1024
-  LPC_DMA->CHANNEL[0].XFERCFG = xfercfg | 1<<DMA_XFERCFG_RELOAD;
 
 #if 0 // trigger using SCT,
   /*------------- SCT -------------*/
@@ -202,17 +176,56 @@ void adc_dma_init(void)
 #endif
 }
 
+void adc_dma_set_rate(uint32_t period_us)
+{
+  // Set up systick to trigger ADC sampling
+  SysTick_Config( (SystemCoreClock/1000000) * period_us );
+
+  // disable systick, call adc_dma_start() to sample
+  NVIC_DisableIRQ(SysTick_IRQn);
+}
 
 void adc_dma_start(void)
 {
-  // Use burst mode to sample ADC as fast as possible
-//  LPC_ADC->SEQA_CTRL |= (1 << ADC_START);
+  // DMA in action, wait until it is done
+  while ( LPC_DMA->CHANNEL[0].XFERCFG & (1<<DMA_XFERCFG_CFGVALID) ) {}
+
+  uint32_t xfercfg = 1<<DMA_XFERCFG_CFGVALID |
+                     //1<<DMA_XFERCFG_CLRTRIG  |
+                     1<<DMA_XFERCFG_SETINTA  |
+                     0<<DMA_XFERCFG_SETINTB  |
+                     1<<DMA_XFERCFG_WIDTH    | // 16 bit of ADC value
+                     0<<DMA_XFERCFG_SRCINC   | // TODO multiple ADC
+                     1<<DMA_XFERCFG_DSTINC   |
+                     (DMA_BUFFER_SIZE-1) << DMA_XFERCFG_XFERCOUNT; // TODO multiple ADC
+
+  // Set the valid bit for channel 0 in the SETVALID register
+  LPC_DMA->SETVALID0 = 1<<0;
+
+  // Channel Descriptor
+  dma2ndDesc.xfercfg = xfercfg;
+  dma2ndDesc.source  = (uint32_t) &LPC_ADC->DAT[_channel];
+  dma2ndDesc.dest    = (uint32_t) &adc_buffer[2*DMA_BUFFER_SIZE-1];
+  dma2ndDesc.next    = 0;
+
+  Chan_Desc_Table[0].source = (uint32_t) &LPC_ADC->DAT[_channel];
+  Chan_Desc_Table[0].dest   = (uint32_t) &adc_buffer[DMA_BUFFER_SIZE-1];
+  Chan_Desc_Table[0].next   = (uint32_t) &dma2ndDesc;
+
+  // Reload bit for multiple descriptor since we need buffer > 1024
+  LPC_DMA->CHANNEL[0].XFERCFG = xfercfg | 1<<DMA_XFERCFG_RELOAD;
+
+  // enable systick to sample ADC
+  NVIC_EnableIRQ(SysTick_IRQn);
 }
 
-void adc_dma_set_rate(uint32_t period_us)
+void adc_dma_stop(void)
 {
-  // Set up systick to trigger
-  SysTick_Config( (SystemCoreClock/1000000) * period_us );
+  // DMA in action, wait until it is done
+  while ( LPC_DMA->CHANNEL[0].XFERCFG & (1<<DMA_XFERCFG_CFGVALID) ) {}
+
+  // enable systick to sample ADC
+  NVIC_DisableIRQ(SysTick_IRQn);
 }
 
 void SysTick_Handler(void)
