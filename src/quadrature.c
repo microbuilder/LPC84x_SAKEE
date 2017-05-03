@@ -245,7 +245,6 @@ uint32_t init_sct(uint32_t setup)
 
 	LPC_SCT0->EVFLAG = 0x000000FF;				        //clear all event flags
 
-  sct_isr_count = 0;
 	NVIC_SetPriority(SCT_IRQn, 1);
 	NVIC_EnableIRQ(SCT_IRQn);
 
@@ -352,8 +351,6 @@ uint32_t qei_rotate(uint32_t * pnt_qei_state, uint32_t direction, uint32_t steps
 
 void SCT_IRQHandler(void)
 {
-	sct_isr_count++;
-
 	LPC_SCT0->EVFLAG = 0x000000FF;				        //clear all event flags
 
 	//update sw_qei_count based on the direction
@@ -369,7 +366,8 @@ void SCT_IRQHandler(void)
 
 		}//CW direction end
 
-		LPC_GPIO_PORT->SET0 = (1 << LED_PIN);
+		// turn on LED when CW
+		LPC_GPIO_PORT->CLR0 = (1 << LED_PIN);
 	}
 	else
 	{ //CCW direction
@@ -382,7 +380,8 @@ void SCT_IRQHandler(void)
 			sw_qei_count--;
 		}//CCW direction end
 
-		LPC_GPIO_PORT->CLR0 = (1 << LED_PIN);
+		// turn off LED when CCW
+		LPC_GPIO_PORT->SET0 = (1 << LED_PIN);
 	}//sw qei count uptede end
 
 	return;
