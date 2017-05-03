@@ -16,5 +16,6 @@
 
 void adc_dma_init(void);
 void adc_dma_start(void);
+void adc_dma_set_rate(uint32_t period_us);
 
 #endif /* ADC_DMA_H_ */

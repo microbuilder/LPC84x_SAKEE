@@ -19,16 +19,16 @@
 #include "adc_dma.h"
 
 #define ADC_CHANNEL 3
-#define ADC_SAMPLE_RATE 500000
+#define ADC_SAMPLE_RATE 1200000
 
 // Max transfer count by DMA
-uint16_t adc_buffer[DMA_BUFFER_SIZE];
+uint16_t adc_buffer[2*DMA_BUFFER_SIZE];
 
 // Instantiate the channel descriptor table, which must be 512-byte aligned (see lpc8xx_dma.h)
 ALIGN(512) DMA_CHDESC_T Chan_Desc_Table[NUM_DMA_CHANNELS];
 
 // Instantiate one reload descriptor. All descriptors must be 16-byte aligned (see lpc8xx_dma.h)
-//ALIGN(16) DMA_RELOADDESC_T Reload_Descriptor_B;
+ALIGN(16) DMA_RELOADDESC_T dma2ndDesc;
 
 uint8_t _channel = 3;
 
@@ -56,9 +56,8 @@ void adc_dma_init(void)
   LPC_ADC->TRM &= ~(1 << ADC_VRANGE);  // '0' for high voltage
 
 	// Write the sequence control word with enable bit set for both sequences
-	LPC_ADC->SEQA_CTRL = 3  << ADC_TRIGGER | // SCT0_OUT3 trigger
-                       // 0   << ADC_TRIGGER | // SW trigger
-	                     // 1   << ADC_TRIGPOL | // Trigger pos edge
+	LPC_ADC->SEQA_CTRL = //3  << ADC_TRIGGER | // SCT0_OUT3 trigger if using SCT to trigger
+                       0   << ADC_TRIGGER | // SW trigger, if using hw timer
                        1   << ADC_MODE    | // End of sequence
                        1   << _channel;     // Select channel
 
@@ -116,7 +115,6 @@ void adc_dma_init(void)
 
   // Config transfer
   uint32_t xfercfg = 1<<DMA_XFERCFG_CFGVALID |
-                     0<<DMA_XFERCFG_RELOAD   | // multiple descriptor if need buffer > 1024
                      //1<<DMA_XFERCFG_CLRTRIG  |
                      1<<DMA_XFERCFG_SETINTA  |
                      0<<DMA_XFERCFG_SETINTB  |
@@ -132,12 +130,19 @@ void adc_dma_init(void)
   LPC_DMA->SETVALID0 = 1<<0;
 
   // Channel Descriptor
+  dma2ndDesc.xfercfg = xfercfg;
+  dma2ndDesc.source  = (uint32_t) &LPC_ADC->DAT[_channel];
+  dma2ndDesc.dest    = (uint32_t) &adc_buffer[2*DMA_BUFFER_SIZE-1];
+  dma2ndDesc.next    = 0;
+
   Chan_Desc_Table[0].source = (uint32_t) &LPC_ADC->DAT[_channel];
-  Chan_Desc_Table[0].dest = (uint32_t) &adc_buffer[DMA_BUFFER_SIZE-1];
-  Chan_Desc_Table[0].next = 0;
+  Chan_Desc_Table[0].dest   = (uint32_t) &adc_buffer[DMA_BUFFER_SIZE-1];
+  Chan_Desc_Table[0].next   = (uint32_t) &dma2ndDesc;
 
-  LPC_DMA->CHANNEL[0].XFERCFG = xfercfg;
+  // Reload bit for multiple descriptor since we need buffer > 1024
+  LPC_DMA->CHANNEL[0].XFERCFG = xfercfg | 1<<DMA_XFERCFG_RELOAD;
 
+#if 0 // trigger using SCT,
   /*------------- SCT -------------*/
   LPC_SYSCON->SYSAHBCLKCTRL |= SCT;
   LPC_SYSCON->PRESETCTRL &= (SCT0_RST_N);
@@ -194,15 +199,26 @@ void adc_dma_init(void)
 
 	// Start SCT
 	LPC_SCT->CTRL &= ~((1 << 2) | (1 << 18));
+#endif
 }
 
 
 void adc_dma_start(void)
 {
-  // Use DMA only burst is supported
-//  LPC_ADC->SEQA_CTRL |= (1UL << ADC_SEQ_ENA); // | (1 << ADC_BURST);
-//  LPC_ADC->SEQA_CTRL |= (1 << ADC_BURST);
+  // Use burst mode to sample ADC as fast as possible
 //  LPC_ADC->SEQA_CTRL |= (1 << ADC_START);
+}
+
+void adc_dma_set_rate(uint32_t period_us)
+{
+  // Set up systick to trigger
+  SysTick_Config( (SystemCoreClock/1000000) * period_us );
+}
+
+void SysTick_Handler(void)
+{
+  // sample using START bit
+  LPC_ADC->SEQA_CTRL |= (1 << ADC_START);
 }
 
 void DMA_IRQHandler(void)

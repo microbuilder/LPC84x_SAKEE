@@ -12,7 +12,10 @@
 
 #include "delay.h"
 
-volatile uint32_t g_delay_ms_ticks;
+// use systick to trigger ADC, enable later when using other hw timer
+#if 0
+
+volatile uint32_t g_delay_ms_ticks = 0;
 
 void
 SysTick_Handler(void)
@@ -29,7 +32,7 @@ delay_ms(uint32_t delayms)
 
 	while ((g_delay_ms_ticks - curTicks) < delayms)
 	{
-		__WFI();
+//		__WFI();
 	}
 }
 
@@ -39,3 +42,4 @@ delay_init(uint32_t interval)
 	NVIC_EnableIRQ(SysTick_IRQn);
 	return SysTick_Config(interval);
 }
+#endif
