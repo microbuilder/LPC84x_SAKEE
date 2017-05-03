@@ -202,17 +202,20 @@ void adc_dma_start(void)
   // Set the valid bit for channel 0 in the SETVALID register
   LPC_DMA->SETVALID0 = 1<<0;
 
-  // Channel Descriptor
-  dma2ndDesc.xfercfg = xfercfg;
+  // 2nd descriptor.
+  dma2ndDesc.xfercfg = xfercfg; // last descriptor has no reload bit set
   dma2ndDesc.source  = (uint32_t) &LPC_ADC->DAT[_channel];
   dma2ndDesc.dest    = (uint32_t) &adc_buffer[2*DMA_BUFFER_SIZE-1];
   dma2ndDesc.next    = 0;
 
+  // Channel Descriptor, the first descriptor
   Chan_Desc_Table[0].source = (uint32_t) &LPC_ADC->DAT[_channel];
   Chan_Desc_Table[0].dest   = (uint32_t) &adc_buffer[DMA_BUFFER_SIZE-1];
-  Chan_Desc_Table[0].next   = (uint32_t) &dma2ndDesc;
+  Chan_Desc_Table[0].next   = (uint32_t) &dma2ndDesc; // link 2nd descriptor to chanel descriptor
 
-  // Reload bit for multiple descriptor since we need buffer > 1024
+  // Set XferCfg register, this will put DMA into ready mode
+  // Set Reload bit, this will cause DMA controller to fetch the 2nd descriptor
+  // in the next link.
   LPC_DMA->CHANNEL[0].XFERCFG = xfercfg | 1<<DMA_XFERCFG_RELOAD;
 
   // enable systick to sample ADC
@@ -236,6 +239,10 @@ void SysTick_Handler(void)
 
 void DMA_IRQHandler(void)
 {
+  // when a Descriptor 1024 completed, this ISR is called
+  // Currently there is 2 DMA linked to each other. Therefore
+  // This function will be called two times to complete 2K buffer
+
   uint32_t intsts = LPC_DMA->INTA0; // Get the interrupt A flags
 
   // CH0 is active
