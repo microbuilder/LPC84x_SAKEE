@@ -73,17 +73,16 @@ void quadrature_init(void)
 
 	qei_state = 0;
 	init_qei(qei_state);
-
 	init_sct(0);
 
-	while(1)
-	{
-		//generate CW sequence
-		qei_rotate((uint32_t *) &qei_state, QEI_CW, 15);
-
-		//generate CCW sequence
-		qei_rotate((uint32_t *) &qei_state, QEI_CCW, 8);
-	}
+//	while(1)
+//	{
+//		//generate CW sequence
+//		qei_rotate((uint32_t *) &qei_state, QEI_CW, 15);
+//
+//		//generate CCW sequence
+//		qei_rotate((uint32_t *) &qei_state, QEI_CCW, 8);
+//	}
 }
 
 void sw_gate(void)
