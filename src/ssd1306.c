@@ -1,9 +1,12 @@
 /*
- * ssd1306.c
- *
- *  Created on: Jan 31, 2017
- *      Author: ktown
- */
+===============================================================================
+ Name        : ssd1306.c
+ Author      : $(author)
+ Version     :
+ Copyright   : $(copyright)
+ Description : SPI based SSD1306 driver for 128x64 pixel OLED displays
+===============================================================================
+*/
 
 #include <string.h>
 #include "ssd1306.h"

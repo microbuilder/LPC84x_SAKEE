@@ -1,9 +1,13 @@
 /*
- * gfx.c
- *
- *  Created on: Apr 3, 2017
- *      Author: ktown
- */
+===============================================================================
+ Name        : gfx.c
+ Author      : $(author)
+ Version     :
+ Copyright   : $(copyright)
+ Description : Basic graphics/drawing routines for 128x64 bitmap displays
+===============================================================================
+*/
+
 
 #include "gfx.h"
 #include "ssd1306.h"

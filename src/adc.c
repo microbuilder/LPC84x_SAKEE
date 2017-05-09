@@ -1,3 +1,13 @@
+/*
+===============================================================================
+ Name        : adc.c
+ Author      : $(author)
+ Version     :
+ Copyright   : $(copyright)
+ Description : Polling based ADC sampler
+===============================================================================
+*/
+
 #include <stdio.h>
 
 #include "LPC8xx.h"
@@ -7,6 +17,12 @@
 #include "lpc8xx_adc.h"
 
 #include "adc.h"
+
+/*
+ Pins used in this application:
+
+ P0.20 [I] - ADC6
+*/
 
 int adc_init(void)
 {

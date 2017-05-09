@@ -1,8 +1,11 @@
 /*
- * ssd1306.h
- *
- *  Created on: Jan 31, 2017
- *      Author: ktown
+===============================================================================
+ Name        : ssd1306.h
+ Author      : $(author)
+ Version     :
+ Copyright   : $(copyright)
+ Description :
+===============================================================================
  */
 
 #include <stdint.h>

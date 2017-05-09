@@ -1,9 +1,12 @@
 /*
- * gfx_tester.h
- *
- *  Created on: Apr 3, 2017
- *      Author: ktown
- */
+===============================================================================
+ Name        : gfx_tester.h
+ Author      : $(author)
+ Version     :
+ Copyright   : $(copyright)
+ Description :
+===============================================================================
+*/
 
 #ifndef TESTERS_GFX_TESTER_H_
 #define TESTERS_GFX_TESTER_H_

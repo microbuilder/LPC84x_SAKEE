@@ -1,9 +1,12 @@
 /*
- * delay.c
- *
- *  Created on: Feb 3, 2017
- *      Author: ktown
- */
+===============================================================================
+ Name        : delay.c
+ Author      : $(author)
+ Version     :
+ Copyright   : $(copyright)
+ Description :
+===============================================================================
+*/
 
 #include "LPC8xx.h"
 #include "core_cm0plus.h"
@@ -12,7 +15,7 @@
 
 #include "delay.h"
 
-// use systick to trigger ADC, enable later when using other hw timer
+// Systick is currently used to trigger ADC, enable later using another hw timer
 #if 0
 
 volatile uint32_t g_delay_ms_ticks = 0;

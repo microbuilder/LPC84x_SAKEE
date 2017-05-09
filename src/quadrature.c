@@ -1,10 +1,10 @@
 /*
 ===============================================================================
- Name        : quadrupe.c
+ Name        : quadrature.c
  Author      : $(author)
  Version     :
  Copyright   : $(copyright)
- Description : main definition
+ Description : SCT based quadrature decoder
 ===============================================================================
 */
 
@@ -22,8 +22,7 @@
 
  P0.26 [O] - GPO: test synchro pulse
  P0.27 [O] - GPO: SCT isr indicator
-
-*/
+ */
 
 volatile uint32_t i, j;
 volatile uint32_t user_gate_pattern, user_gate_counter;
@@ -35,8 +34,8 @@ volatile uint32_t sw_qei_count, sw_qei_max;
 enum sct_in			{sct_in_qei_A = 0, sct_in_qei_B};
 enum sct_out		{sct_out_qei_direction = 0};
 enum sct_mc			{sct_m_dummy = 0};
-enum sct_state	{sct_st_qei00 = 0, sct_st_qei01, sct_st_qei10, sct_st_qei11};
-enum sct_event	{sct_ev_qei00_A_re = 0, sct_ev_qei00_B_re,
+enum sct_state	    {sct_st_qei00 = 0, sct_st_qei01, sct_st_qei10, sct_st_qei11};
+enum sct_event	    {sct_ev_qei00_A_re = 0, sct_ev_qei00_B_re,
 								 sct_ev_qei01_A_fe, sct_ev_qei01_B_re,
 								 sct_ev_qei10_A_re, sct_ev_qei10_B_fe,
 								 sct_ev_qei11_A_fe, sct_ev_qei11_B_fe};
@@ -101,15 +100,15 @@ void sw_gate(void)
 
 uint32_t init_mcu(uint32_t setup)
 {
-	LPC_SYSCON->SYSAHBCLKCTRL |= 1<<7;							//enable access to SWM
+	LPC_SYSCON->SYSAHBCLKCTRL |= 1<<7;				//enable access to SWM
 
 	//CLKOUT setup begin
 	//CLKOUT = main/1 @ P0.19
 	LPC_SYSCON->SYSAHBCLKCTRL |= 1<<7;				//enable SWM clock
-	LPC_SYSCON->CLKOUTDIV = 1;								//prepare CLKOUT/1
-	LPC_SYSCON->CLKOUTSEL = 3;								//CLKOUT =  main clock
-	LPC_SYSCON->CLKOUTUEN = 0;								//update CLKOUT...
-	LPC_SYSCON->CLKOUTUEN = 1;								//... selection
+	LPC_SYSCON->CLKOUTDIV = 1;						//prepare CLKOUT/1
+	LPC_SYSCON->CLKOUTSEL = 3;						//CLKOUT =  main clock
+	LPC_SYSCON->CLKOUTUEN = 0;						//update CLKOUT...
+	LPC_SYSCON->CLKOUTUEN = 1;						//... selection
 	//CLKOUT setup end
 	LPC_SWM->PINASSIGN11 = (LPC_SWM->PINASSIGN11 & ~(0xFF<<16)) | ((0*32+19)<<16);	//CLKOUT @ P0.19
 
@@ -126,30 +125,31 @@ uint32_t init_sct(uint32_t setup)
 	//SCT setup begin
 	LPC_SYSCON->SYSAHBCLKCTRL |= 1<<8;				//enable SCT clock...
 	LPC_SYSCON->PRESETCTRL &= ~(1<<8);				//... reset...
-	LPC_SYSCON->PRESETCTRL |= 1<<8;						//... release SCT
+	LPC_SYSCON->PRESETCTRL |= 1<<8;					//... release SCT
 
 	LPC_SWM->PINASSIGN6 = (LPC_SWM->PINASSIGN6 & ~(0xFF<<24)) | ((0*32+20)<<24);	//CTIN_0 @ P0.20 (QEI A)
-	LPC_INPUTMUX->SCT0_INMUX0 = 0;																								//SCT0_PIN0 = SWM
-	LPC_IOCON->PIO0_20 = (LPC_IOCON->PIO0_20 & ~(3<<3)) | 1<<5 | 0<<3;						//no PU/PD; enable hysteresis
+	LPC_INPUTMUX->SCT0_INMUX0 = 0;													//SCT0_PIN0 = SWM
+	LPC_IOCON->PIO0_20 = (LPC_IOCON->PIO0_20 & ~(3<<3)) | 1<<5 | 0<<3;				//no PU/PD; enable hysteresis
 
 	LPC_SWM->PINASSIGN7 = (LPC_SWM->PINASSIGN7 & ~(0xFF<< 0)) | ((0*32+21)<< 0);	//CTIN_1 @ P0.21 (QEI B)
-	LPC_INPUTMUX->SCT0_INMUX1 = 1;																								//SCT0_PIN1 = SWM
-	LPC_IOCON->PIO0_21 = (LPC_IOCON->PIO0_21 & ~(3<<3)) | 1<<5 | 0<<3;						//no PU/PD; enable hysteresis
+	LPC_INPUTMUX->SCT0_INMUX1 = 1;													//SCT0_PIN1 = SWM
+	LPC_IOCON->PIO0_21 = (LPC_IOCON->PIO0_21 & ~(3<<3)) | 1<<5 | 0<<3;				//no PU/PD; enable hysteresis
 
 	LPC_SWM->PINASSIGN7 = (LPC_SWM->PINASSIGN7 & ~(0xFF<<24)) | ((0*32+22)<<24);	//CTOUT_0 @ P0.22 (counting up indicator)
-	LPC_IOCON->PIO0_22 = (LPC_IOCON->PIO0_22 & ~(3<<3)) | 1<<5 | 0<<3;						//no PU/PD; enable hysteresis
+	LPC_IOCON->PIO0_22 = (LPC_IOCON->PIO0_22 & ~(3<<3)) | 1<<5 | 0<<3;				//no PU/PD; enable hysteresis
 
-	LPC_SCT0->CONFIG =           0<<18 |	//no autolimit H
-															 0<<17 |	//no autolimit L
-									 (1<<sct_in_qei_A  |	//synchronize inputs...
-								1<<sct_in_qei_B)<<9  |	//...
-								 						    1<<8 |	//do not reload H match registers
-																1<<7 |	//do not reload L match registers
-																0<<3 |	//NA
-																0<<1 |	//System Clock Mode
-																1<<0;		//1x 32-bit counter
-	LPC_SCT0->CTRL_U = (1-1)<<5  | 1<<4  | 0<<3  | 1<<2  | 0<<1  | 0<<0;					//U: no prescaler,bidirectional,NA,halt,NA,count up
-	LPC_SCT0->EVEN = 0;										//disable all interrupts
+	LPC_SCT0->CONFIG =  0<<18 |					//no autolimit H
+					    0<<17 |					//no autolimit L
+						(1<<sct_in_qei_A  |		//synchronize inputs...
+						1<<sct_in_qei_B)<<9  |	//...
+						1<<8 |					//do not reload H match registers
+						1<<7 |					//do not reload L match registers
+						0<<3 |					//NA
+						0<<1 |					//System Clock Mode
+						1<<0;					//1x 32-bit counter
+
+	LPC_SCT0->CTRL_U = (1-1)<<5  | 1<<4  | 0<<3  | 1<<2  | 0<<1  | 0<<0;	//U: no prescaler,bidirectional,NA,halt,NA,count up
+	LPC_SCT0->EVEN = 0;	//disable all interrupts
 
 	//match register setup
 	//====================
@@ -273,17 +273,17 @@ uint32_t init_qei(uint32_t state)
 	{
 		case 0: QEI_A_LOW;
 		        QEI_B_LOW;
-						break;
+		        break;
 		case 1: QEI_A_HIGH;
 		        QEI_B_LOW;
-						break;
+				break;
 		case 2: QEI_A_LOW;
 		        QEI_B_HIGH;
-						break;
+				break;
 		case 3:
-	 default: QEI_A_HIGH;
-		        QEI_B_HIGH;
-						break;
+		default: QEI_A_HIGH;
+		      	QEI_B_HIGH;
+				break;
 	}
 
 	result = 0;
@@ -351,7 +351,7 @@ uint32_t qei_rotate(uint32_t * pnt_qei_state, uint32_t direction, uint32_t steps
 
 void SCT_IRQHandler(void)
 {
-	LPC_SCT0->EVFLAG = 0x000000FF;				        //clear all event flags
+	LPC_SCT0->EVFLAG = 0x000000FF;	//clear all event flags
 
 	//update sw_qei_count based on the direction
 	if ((LPC_SCT0->OUTPUT & (1<<sct_out_qei_direction)) == 0)
@@ -363,10 +363,9 @@ void SCT_IRQHandler(void)
 		else
 		{
 			sw_qei_count++;
+		} //CW direction end
 
-		}//CW direction end
-
-		// turn on LED when CW
+		// Enable LED when CW
 		LPC_GPIO_PORT->CLR0 = (1 << LED_PIN);
 	}
 	else
@@ -380,9 +379,9 @@ void SCT_IRQHandler(void)
 			sw_qei_count--;
 		}//CCW direction end
 
-		// turn off LED when CCW
+		// Disable LED when CCW
 		LPC_GPIO_PORT->SET0 = (1 << LED_PIN);
-	}//sw qei count uptede end
+	}//sw qei count update end
 
 	return;
 }

@@ -1,8 +1,11 @@
 /*
- * gfx.h
- *
- *  Created on: Apr 3, 2017
- *      Author: ktown
+===============================================================================
+ Name        : gfx.h
+ Author      : $(author)
+ Version     :
+ Copyright   : $(copyright)
+ Description :
+===============================================================================
  */
 
 #ifndef GFX_H_

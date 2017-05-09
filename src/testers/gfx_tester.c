@@ -1,9 +1,13 @@
 /*
- * gfx_tester.c
- *
- *  Created on: Apr 3, 2017
- *      Author: ktown
- */
+===============================================================================
+ Name        : gfx_tester.c
+ Author      : $(author)
+ Version     :
+ Copyright   : $(copyright)
+ Description : Misc test functions for the display sub-system
+===============================================================================
+*/
+
 
 #include "../gfx.h"
 #include "../delay.h"

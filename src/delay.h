@@ -1,9 +1,12 @@
 /*
- * delay.h
- *
- *  Created on: Feb 3, 2017
- *      Author: ktown
- */
+===============================================================================
+ Name        : delay.h
+ Author      : $(author)
+ Version     :
+ Copyright   : $(copyright)
+ Description :
+===============================================================================
+*/
 
 #ifndef DELAY_H_
 #define DELAY_H_

@@ -1,9 +1,12 @@
 /*
- * adc_dma.h
- *
- *  Created on: Apr 26, 2017
- *      Author: hathach
- */
+===============================================================================
+ Name        : adc_dma.h
+ Author      : $(author)
+ Version     :
+ Copyright   : $(copyright)
+ Description :
+===============================================================================
+*/
 
 #ifndef ADC_DMA_H_
 #define ADC_DMA_H_
