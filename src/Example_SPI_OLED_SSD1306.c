@@ -47,8 +47,8 @@
  P0.20	A5	  SCT Quad PHA
  P0.21	A4	  SCT Quad PHB
  P0.22	A3	  SCT Quad Dir Indicator
- P0.26		  SCT Quad Test Synchro Pulse (BLUE LED)
- P0.27	D9	  SCT Quad ISR Inidicator
+ P0.26	D11	  SCT Quad Test Synchro Pulse (Conflict with OLED but not used in production)
+ P0.27	D9	  SCT Quad ISR Indicator (BLUE LED)
 
  DMA ADC
  LPC    ARD   Description

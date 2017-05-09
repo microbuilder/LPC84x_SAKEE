@@ -36,9 +36,9 @@ enum sct_out		{sct_out_qei_direction = 0};
 enum sct_mc			{sct_m_dummy = 0};
 enum sct_state	    {sct_st_qei00 = 0, sct_st_qei01, sct_st_qei10, sct_st_qei11};
 enum sct_event	    {sct_ev_qei00_A_re = 0, sct_ev_qei00_B_re,
-								 sct_ev_qei01_A_fe, sct_ev_qei01_B_re,
-								 sct_ev_qei10_A_re, sct_ev_qei10_B_fe,
-								 sct_ev_qei11_A_fe, sct_ev_qei11_B_fe};
+					 sct_ev_qei01_A_fe, sct_ev_qei01_B_re,
+					 sct_ev_qei10_A_re, sct_ev_qei10_B_fe,
+					 sct_ev_qei11_A_fe, sct_ev_qei11_B_fe};
 
 #define QEI_CW  0
 #define QEI_CCW 1
