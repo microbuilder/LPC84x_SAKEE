@@ -132,16 +132,9 @@ void adc_dma_set_rate(uint32_t period_us)
 	NVIC_DisableIRQ(SysTick_IRQn);
 }
 
-void adc_dma_start(void)
+static void cfg_dma_xfer(uint32_t count)
 {
-	// If DMA is busy, wait until it is finished
-  while ( adc_dma_busy() ) { }
-
-	// Enable sequence A interrupt to trigger DMA transfer
-	LPC_ADC->INTEN = (1 << SEQA_INTEN);
-//	NVIC_DisableIRQ(ADC_THCMP_IRQn);
-
-	// DMA transfer config
+  // currently only support count = 1024 or 2*1024
 	uint32_t xfercfg = 1 << DMA_XFERCFG_CFGVALID |
                      // 1 << DMA_XFERCFG_CLRTRIG |
                      1 << DMA_XFERCFG_SETINTA |
@@ -151,24 +144,40 @@ void adc_dma_start(void)
                      1 << DMA_XFERCFG_DSTINC |
                      (DMA_BUFFER_SIZE - 1) << DMA_XFERCFG_XFERCOUNT;
 
-	// Set the valid bit for channel 0 in the SETVALID register
-	LPC_DMA->SETVALID0 = 1 << 0;
-
-	// Second descriptor
-	dma2ndDesc.xfercfg = xfercfg; // last descriptor has no reload bit set
-	dma2ndDesc.source  = (uint32_t) &LPC_ADC->DAT[_channel];
-	dma2ndDesc.dest    = (uint32_t) &adc_buffer[2 * DMA_BUFFER_SIZE - 1];
-	dma2ndDesc.next    = 0;
+	if ( count > DMA_BUFFER_SIZE )
+	{
+	  // Second descriptor
+	  dma2ndDesc.xfercfg = xfercfg; // last descriptor has no reload bit set
+	  dma2ndDesc.source  = (uint32_t) &LPC_ADC->DAT[_channel];
+	  dma2ndDesc.dest    = (uint32_t) &adc_buffer[2 * DMA_BUFFER_SIZE - 1];
+	  dma2ndDesc.next    = 0;
+	}
 
 	// Channel Descriptor, the first descriptor
+	// link 2nd descriptor to channel descriptor if needed
 	Chan_Desc_Table[0].source = (uint32_t) &LPC_ADC->DAT[_channel];
 	Chan_Desc_Table[0].dest = (uint32_t) &adc_buffer[DMA_BUFFER_SIZE - 1];
-	Chan_Desc_Table[0].next = (uint32_t) &dma2ndDesc; // link 2nd descriptor to channel descriptor
+	Chan_Desc_Table[0].next = ( count > DMA_BUFFER_SIZE ) ? ((uint32_t) &dma2ndDesc) : 0;
+
+	// Set the valid bit for channel 0 in the SETVALID register
+	LPC_DMA->SETVALID0 = 1 << 0;
 
 	// Set XFERCFG register, which will put DMA into ready mode
 	// Set Reload bit, which will cause the DMA controller to fetch
 	// the 2nd descriptor in the next link.
-	LPC_DMA->CHANNEL[0].XFERCFG = xfercfg | 1 << DMA_XFERCFG_RELOAD;
+	LPC_DMA->CHANNEL[0].XFERCFG = xfercfg | ((count > DMA_BUFFER_SIZE) ? (1 << DMA_XFERCFG_RELOAD) : 0);
+}
+
+void adc_dma_start(void)
+{
+	// If DMA is busy, wait until it is finished
+  while ( adc_dma_busy() ) { }
+
+	// Enable sequence A interrupt to trigger DMA transfer
+	LPC_ADC->INTEN = (1 << SEQA_INTEN);
+//	NVIC_DisableIRQ(ADC_THCMP_IRQn);
+
+	cfg_dma_xfer(2*DMA_BUFFER_SIZE);
 
 	// Enable the systick timer to start sampling the ADC at the specified sample rate
 	NVIC_EnableIRQ(SysTick_IRQn);
@@ -188,26 +197,7 @@ void adc_dma_start_with_threshold(uint16_t low, uint16_t high, uint8_t intmode)
   LPC_ADC->INTEN = (1 << SEQA_INTEN) | (intmode << (3 + 2*_channel));
 //  NVIC_EnableIRQ(ADC_THCMP_IRQn);
 
-	// DMA transfer config
-	uint32_t xfercfg = 1 << DMA_XFERCFG_CFGVALID |
-                     // 1 << DMA_XFERCFG_CLRTRIG |
-                     1 << DMA_XFERCFG_SETINTA |
-                     0 << DMA_XFERCFG_SETINTB |
-                     1 << DMA_XFERCFG_WIDTH | 	// 16 bits for 12-bit ADC values
-                     0 << DMA_XFERCFG_SRCINC | 	// TODO multiple ADC
-                     1 << DMA_XFERCFG_DSTINC |
-                     (DMA_BUFFER_SIZE - 1) << DMA_XFERCFG_XFERCOUNT;
-
-	// Set the valid bit for channel 0 in the SETVALID register
-	LPC_DMA->SETVALID0 = 1 << 0;
-
-	// Channel Descriptor, the first descriptor
-	Chan_Desc_Table[0].source = (uint32_t) &LPC_ADC->DAT[_channel];
-	Chan_Desc_Table[0].dest = (uint32_t) &adc_buffer[DMA_BUFFER_SIZE - 1];
-	Chan_Desc_Table[0].next = 0;
-
-	// Set XFERCFG register, which will put DMA into ready mode
-	LPC_DMA->CHANNEL[0].XFERCFG = xfercfg;
+	cfg_dma_xfer(DMA_BUFFER_SIZE);
 
 	// Enable the systick timer to start sampling the ADC at the specified sample rate
 	NVIC_EnableIRQ(SysTick_IRQn);
@@ -222,13 +212,23 @@ void adc_dma_start_with_threshold(uint16_t low, uint16_t high, uint8_t intmode)
     // Continue to sample another 1K
     LPC_ADC->INTEN = (1 << SEQA_INTEN);
 
-    // Set the valid bit for channel 0 in the SETVALID register
-    LPC_DMA->SETVALID0 = 1 << 0;
+    // DMA transfer config
+    uint32_t xfercfg = 1 << DMA_XFERCFG_CFGVALID |
+                       // 1 << DMA_XFERCFG_CLRTRIG |
+                       1 << DMA_XFERCFG_SETINTA |
+                       0 << DMA_XFERCFG_SETINTB |
+                       1 << DMA_XFERCFG_WIDTH | 	// 16 bits for 12-bit ADC values
+                       0 << DMA_XFERCFG_SRCINC | 	// TODO multiple ADC
+                       1 << DMA_XFERCFG_DSTINC |
+                       (DMA_BUFFER_SIZE - 1) << DMA_XFERCFG_XFERCOUNT;
 
     // Channel Descriptor, the first descriptor
     Chan_Desc_Table[0].source = (uint32_t) &LPC_ADC->DAT[_channel];
     Chan_Desc_Table[0].dest = (uint32_t) &adc_buffer[2*DMA_BUFFER_SIZE - 1];
     Chan_Desc_Table[0].next = 0;
+
+    // Set the valid bit for channel 0 in the SETVALID register
+    LPC_DMA->SETVALID0 = 1 << 0;
 
     // Set XFERCFG register, which will put DMA into ready mode
     LPC_DMA->CHANNEL[0].XFERCFG = xfercfg;
