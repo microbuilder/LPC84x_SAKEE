@@ -13,10 +13,10 @@
 #include "LPC8xx.h"
 #include "lpc_types.h"
 #include "core_cm0plus.h"
-#include "lpc8xx_syscon.h"
-#include "lpc8xx_swm.h"
-#include "lpc8xx_adc.h"
-#include "lpc8xx_dma.h"
+#include "syscon.h"
+#include "swm.h"
+#include "adc.h"
+#include "dma.h"
 
 #include "adc_dma.h"
 
@@ -42,27 +42,24 @@ volatile uint8_t _channel = 3;
 void adc_dma_init(void)
 {
 	/*------------- ADC -------------*/
-
 	// Power up and reset the ADC, enable clocks to peripherals
 	LPC_SYSCON->PDRUNCFG &= ~(ADC_PD);		// Power up the ADC
-	LPC_SYSCON->SYSAHBCLKCTRL |= (ADC);		// Enable the ADC
-	LPC_SYSCON->PRESETCTRL &= (ADC_RST_N);	// Reset the ADC
-	LPC_SYSCON->PRESETCTRL |= ~(ADC_RST_N);
+	LPC_SYSCON->SYSAHBCLKCTRL0 |= (ADC);		// Enable the ADC
+	LPC_SYSCON->PRESETCTRL0 &= (ADC_RST_N);	// Reset the ADC
+	LPC_SYSCON->PRESETCTRL0 |= ~(ADC_RST_N);
 
 	// Perform a self-calibration
 	LPC_ADC->CTRL = (1 << ADC_CALMODE)  |
-			        (0 << ADC_LPWRMODE) |
-					(0 << ADC_CLKDIV);
+			            (0 << ADC_LPWRMODE) |
+			            (0 << ADC_CLKDIV);
 
 	// Poll the calibration mode bit until it is cleared
-	while ( LPC_ADC->CTRL & (1 << ADC_CALMODE) )
-	{
-	}
+	while ( LPC_ADC->CTRL & (1 << ADC_CALMODE) ) { }
 
 	// Configure clock div
 	LPC_ADC->CTRL = (0 << ADC_CALMODE)  |
-			        (0 << ADC_LPWRMODE) |
-					(0 << ADC_CLKDIV);
+			            (0 << ADC_LPWRMODE) |
+			            (0 << ADC_CLKDIV);
 
 	// Configure the ADC for the appropriate analog supply voltage using the
 	// TRM register. For a sampling rate higher than 1 Msamples/s, VDDA must
@@ -71,14 +68,14 @@ void adc_dma_init(void)
 
 	// Write the sequence control word
 	LPC_ADC->SEQA_CTRL = 0 << ADC_TRIGGER | // SW trigger, if using hw timer
-					     1 << ADC_MODE    | // End of sequence
-					     1 << _channel;     // Select channel
+					             1 << ADC_MODE    | // End of sequence
+					             1 << _channel;     // Select channel
 
 	// Sequence B not used
 	LPC_ADC->SEQB_CTRL = 0x00;
 
 	// Configure the SWM (see utilities_lib and lpc8xx_swm.h)
-	LPC_SYSCON->SYSAHBCLKCTRL |= SWM;
+	LPC_SYSCON->SYSAHBCLKCTRL0 |= SWM;
 
 	// Configure ADC3 (P0_23) on the LPC824,
 	// which corresponds to pin A2 on the Arduino headers.
@@ -96,9 +93,9 @@ void adc_dma_init(void)
 	/*------------- DMA -------------*/
 
 	// Reset the DMA, and enable peripheral clocks
-	LPC_SYSCON->PRESETCTRL &= (DMA_RST_N);
-	LPC_SYSCON->PRESETCTRL |= ~(DMA_RST_N);
-	LPC_SYSCON->SYSAHBCLKCTRL |= DMA;
+	LPC_SYSCON->PRESETCTRL0 &= (DMA_RST_N);
+	LPC_SYSCON->PRESETCTRL0 |= ~(DMA_RST_N);
+	LPC_SYSCON->SYSAHBCLKCTRL0 |= DMA;
 
 	// Set the master DMA controller enable bit in the CTRL register
 	LPC_DMA->CTRL = 1;
@@ -125,7 +122,7 @@ void adc_dma_init(void)
 			                  0 << DMA_CFG_CHPRIORITY;
 
 	// Use ADC Seq A to trigger DMA0
-	LPC_DMATRIGMUX->DMA_ITRIG_INMUX0 = 0;
+	LPC_INMUX_TRIGMUX->DMA_ITRIG_INMUX0 = 0;
 
 	// Enable the DMA interrupt in the NVIC
 	NVIC_EnableIRQ(DMA_IRQn);
@@ -134,7 +131,7 @@ void adc_dma_init(void)
 void adc_dma_set_rate(uint32_t period_us)
 {
 	// Setup systick timer to set the ADC sampling rate
-	SysTick_Config((SystemCoreClock / 1000000) * period_us);
+	SysTick_Config((system_ahb_clk / 1000000) * period_us);
 
 	// Disable systick timer, call adc_dma_start() to start sampling
 	NVIC_DisableIRQ(SysTick_IRQn);
