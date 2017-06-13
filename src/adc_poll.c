@@ -12,9 +12,9 @@
 
 #include "LPC8xx.h"
 #include "core_cm0plus.h"
-#include "lpc8xx_syscon.h"
-#include "lpc8xx_swm.h"
-#include "lpc8xx_adc.h"
+#include "syscon.h"
+#include "swm.h"
+#include "adc.h"
 
 #include "adc.h"
 
@@ -24,8 +24,9 @@
  P0.20 [I] - ADC6
 */
 
-int adc_init(void)
+int adc_poll_init(void)
 {
+#if 0
 	// This function configures ADC6 (P0_20) on the LPC824,
 	// which corresponds to pin A5 on the Arduino headers.
 	// Configure the SWM (see utilities_lib and lpc8xx_swm.h)
@@ -58,14 +59,14 @@ int adc_init(void)
 	// Write the sequence control word with enable bit set for both sequences
 	LPC_ADC->SEQA_CTRL = 0x00;
 	LPC_ADC->SEQB_CTRL = 0x00;
-
+#endif
 	return 0;
 }
 
-uint16_t adc_read(uint8_t adc_ch)
+uint16_t adc_poll_read(uint8_t adc_ch)
 {
 	uint32_t sample;
-
+#if 0
 	LPC_ADC->SEQA_CTRL = 1UL << ADC_SEQ_ENA |	// Enable sequence
 						 0   << ADC_BURST   |   // Single read
 						 0   << ADC_START   |   // Do not start
@@ -95,4 +96,5 @@ uint16_t adc_read(uint8_t adc_ch)
 	while((sample & (1UL<<31)) == 0);
 
 	return (uint16_t)((sample & 0xFFF0) >> 4) ;
+#endif
 }
