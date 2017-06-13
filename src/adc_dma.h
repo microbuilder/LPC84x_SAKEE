@@ -19,10 +19,10 @@
 
 void adc_dma_init(void);
 void adc_dma_set_rate(uint32_t period_us);
+bool adc_dma_busy(void);
 
 void adc_dma_start(void);
+void adc_dma_start_with_threshold(uint16_t low, uint16_t high, uint8_t intmode);
 void adc_dma_stop(void);
-
-bool adc_dma_busy(void);
 
 #endif /* ADC_DMA_H_ */

@@ -109,7 +109,11 @@ int main(void)
 		{
 		  // Start sampling, After buffers are full
 		  // sampling will stop --> adc_dma_busy() return false
-		  adc_dma_start();
+		  //		  adc_dma_start();
+
+		  // Start with threshold (low, high, intmode)
+		  // interrupt mode: 0 = disabled, 1 = outside threshold, 2 = crossing threshold
+		  adc_dma_start_with_threshold(0x40, 0xCF, 2);
 		}
 
 		// Stop sampling
