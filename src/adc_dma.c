@@ -20,12 +20,6 @@
 
 #include "adc_dma.h"
 
-/*
- Pins used in this application:
-
- P0.23 [I] - ADC3 (A2 on Arduino Header)
-*/
-
 // Buffer with max number of samples to store via DMA
 // Should be a multiple of 1024 (DMA_BUFFER_SIZE)
 uint16_t adc_buffer[2 * DMA_BUFFER_SIZE];
@@ -37,9 +31,9 @@ ALIGN(512) DMA_CHDESC_T Chan_Desc_Table[NUM_DMA_CHANNELS];
 ALIGN(16) DMA_RELOADDESC_T dma2ndDesc;
 
 // ADC channel to use
+// In this application it is P0.14 (A0)  Analog Input - ADC2
 const uint8_t _channel = 2;
 #define ADC_N(_n)    (1 << (14+(_n)))
-
 
 void adc_dma_init(void)
 {
@@ -114,13 +108,13 @@ void adc_dma_init(void)
 
 	// Configure the DMA channel
 	LPC_DMA->CHANNEL[0].CFG = 1 << DMA_CFG_HWTRIGEN |		// HW triggered by ADC
-			                  0 << DMA_CFG_TRIGTYPE |
-			                  1 << DMA_CFG_TRIGPOL |
-			                  1 << DMA_CFG_TRIGBURST |		// Burst mode required
-			                  0 << DMA_CFG_BURSTPOWER | 	// Burst size in power of 2
-			                  0 << DMA_CFG_SRCBURSTWRAP | 	// TODO: Multiple ADC
-			                  0 << DMA_CFG_DSTBURSTWRAP |
-			                  0 << DMA_CFG_CHPRIORITY;
+                            0 << DMA_CFG_TRIGTYPE |
+                            1 << DMA_CFG_TRIGPOL |
+                            1 << DMA_CFG_TRIGBURST |		// Burst mode required
+                            0 << DMA_CFG_BURSTPOWER | 	// Burst size in power of 2
+                            0 << DMA_CFG_SRCBURSTWRAP | 	// TODO: Multiple ADC
+                            0 << DMA_CFG_DSTBURSTWRAP |
+                            0 << DMA_CFG_CHPRIORITY;
 
 	// Use ADC Seq A to trigger DMA0
 	LPC_INMUX_TRIGMUX->DMA_ITRIG_INMUX0 = 0;
@@ -141,28 +135,26 @@ void adc_dma_set_rate(uint32_t period_us)
 void adc_dma_start(void)
 {
 	// If DMA is busy, wait until it is finished
-	while ( LPC_DMA->CHANNEL[0].XFERCFG & (1 << DMA_XFERCFG_CFGVALID))
-	{
-	}
+  while ( adc_dma_busy() ) { }
 
 	// DMA transfer config
 	uint32_t xfercfg = 1 << DMA_XFERCFG_CFGVALID |
-					   // 1 << DMA_XFERCFG_CLRTRIG |
-					   1 << DMA_XFERCFG_SETINTA |
-					   0 << DMA_XFERCFG_SETINTB |
-					   1 << DMA_XFERCFG_WIDTH | 	// 16 bits for 12-bit ADC values
-					   0 << DMA_XFERCFG_SRCINC | 	// TODO multiple ADC
-					   1 << DMA_XFERCFG_DSTINC |
-					   (DMA_BUFFER_SIZE - 1) << DMA_XFERCFG_XFERCOUNT;
+                     // 1 << DMA_XFERCFG_CLRTRIG |
+                     1 << DMA_XFERCFG_SETINTA |
+                     0 << DMA_XFERCFG_SETINTB |
+                     1 << DMA_XFERCFG_WIDTH | 	// 16 bits for 12-bit ADC values
+                     0 << DMA_XFERCFG_SRCINC | 	// TODO multiple ADC
+                     1 << DMA_XFERCFG_DSTINC |
+                     (DMA_BUFFER_SIZE - 1) << DMA_XFERCFG_XFERCOUNT;
 
 	// Set the valid bit for channel 0 in the SETVALID register
 	LPC_DMA->SETVALID0 = 1 << 0;
 
 	// Second descriptor
 	dma2ndDesc.xfercfg = xfercfg; // last descriptor has no reload bit set
-	dma2ndDesc.source = (uint32_t) &LPC_ADC->DAT[_channel];
-	dma2ndDesc.dest = (uint32_t) &adc_buffer[2 * DMA_BUFFER_SIZE - 1];
-	dma2ndDesc.next = 0;
+	dma2ndDesc.source  = (uint32_t) &LPC_ADC->DAT[_channel];
+	dma2ndDesc.dest    = (uint32_t) &adc_buffer[2 * DMA_BUFFER_SIZE - 1];
+	dma2ndDesc.next    = 0;
 
 	// Channel Descriptor, the first descriptor
 	Chan_Desc_Table[0].source = (uint32_t) &LPC_ADC->DAT[_channel];
@@ -174,16 +166,14 @@ void adc_dma_start(void)
 	// the 2nd descriptor in the next link.
 	LPC_DMA->CHANNEL[0].XFERCFG = xfercfg | 1 << DMA_XFERCFG_RELOAD;
 
-	// Enable the systick timer to start samping the ADC at the specified sample rate
+	// Enable the systick timer to start sampling the ADC at the specified sample rate
 	NVIC_EnableIRQ(SysTick_IRQn);
 }
 
 void adc_dma_stop(void)
 {
 	// If DMA is busy, wait until it is finished
-	while ( LPC_DMA->CHANNEL[0].XFERCFG & (1 << DMA_XFERCFG_CFGVALID))
-	{
-	}
+	while ( adc_dma_busy() ) { }
 
 	// Disable the systick timer and stop sampling the ADC
 	NVIC_DisableIRQ(SysTick_IRQn);
@@ -193,6 +183,11 @@ void SysTick_Handler(void)
 {
 	// Get a new ADC sample using the START bit
 	LPC_ADC->SEQA_CTRL |= (1 << ADC_START);
+}
+
+bool adc_dma_busy(void)
+{
+  return LPC_DMA->CHANNEL[0].XFERCFG & (1 << DMA_XFERCFG_CFGVALID);
 }
 
 void DMA_IRQHandler(void)
@@ -209,4 +204,10 @@ void DMA_IRQHandler(void)
 	}
 
 	LPC_DMA->INTA0 = intsts; // Clear interrupt
+
+	// End of DMA descriptor chain, disable timer ADC trigger
+	if ( ! (LPC_DMA->CHANNEL[0].XFERCFG & (1 << DMA_XFERCFG_CFGVALID)) )
+	{
+	  NVIC_DisableIRQ(SysTick_IRQn);
+	}
 }

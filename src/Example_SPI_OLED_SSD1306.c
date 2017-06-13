@@ -92,23 +92,27 @@ int main(void)
 	adc_dma_init();
 	adc_dma_set_rate(100); // Set the ADC sample rate in microseconds
 
-	// Start sampling
-	adc_dma_start();
-
-	// Stop sampling
-	//adc_dma_stop();
-
 	// Initialize the SSD1306 display
 	//ssd1306_init();
 
-	// Blinky Loop
 	while(1)
 	{
+#if 0
 		LPC_GPIO_PORT->CLR0 = (1 << LED_PIN);
-		//delay_ms(1000);
+		delay_ms(1000);
 
 		LPC_GPIO_PORT->SET0 = (1 << LED_PIN);
-		//delay_ms(1000);
+		delay_ms(1000);
+#endif
+
+		if ( !adc_dma_busy() )
+		{
+		  // Start sampling
+		  adc_dma_start();
+		}
+
+		// Stop sampling
+		//adc_dma_stop();
 	}
 
 	return 0;
