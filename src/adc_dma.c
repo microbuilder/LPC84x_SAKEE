@@ -280,6 +280,7 @@ void DMA_IRQHandler(void)
 	}
 }
 
+// Enable if need to determine the sample that trigger threshold interrupt
 #if 0
 void ADC_THCMP_IRQHandler(void)
 {
@@ -290,13 +291,7 @@ void ADC_THCMP_IRQHandler(void)
   {
     // sample that causes interrupt is (DMA_BUFFER_SIZE-1) - current XFERCFG0.XFERCOUNT - 1
     // Mark 2nd Descriptor as valid
-    if ( LPC_DMA->CHANNEL[0].XFERCFG & 0xFFFF0000 )
-    {
-      dma2ndDesc.xfercfg |= (1 << DMA_XFERCFG_CFGVALID);
-    }else
-    {
-      // DMA transfer already ended, must start new one
-    }
+    // LPC_DMA->CHANNEL[0].XFERCFG & 0xFFFF0000
   }
 
   LPC_ADC->FLAGS = intsts; // clear interrupts
