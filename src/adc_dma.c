@@ -202,7 +202,8 @@ void adc_dma_start_with_threshold(uint16_t low, uint16_t high, uint8_t intmode)
 	// Enable the systick timer to start sampling the ADC at the specified sample rate
 	NVIC_EnableIRQ(SysTick_IRQn);
 
-	// If DMA is busy, wait until it is finished
+	// Wait until DMA is finished, if the trigger does happen, do nothing
+	// Otherwise get another 1K sample
   while ( adc_dma_busy() ) { }
 
   if (LPC_ADC->FLAGS & (1 << _channel))
