@@ -107,7 +107,8 @@ int main(void)
 
 		if ( !adc_dma_busy() )
 		{
-		  // Start sampling
+		  // Start sampling, After buffers are full
+		  // sampling will stop --> adc_dma_busy() return false
 		  adc_dma_start();
 		}
 
