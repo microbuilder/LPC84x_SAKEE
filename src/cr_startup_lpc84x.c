@@ -1,10 +1,10 @@
 //*****************************************************************************
-// LPC82x Microcontroller Startup code for use with LPCXpresso IDE
+// LPC84x Microcontroller Startup code for use with MCUXpresso IDE
 //
-// Version : 150706
+// Version : 170308
 //*****************************************************************************
 //
-// Copyright(C) NXP Semiconductors, 2014-2015
+// Copyright(C) NXP Semiconductors, 2017
 // All rights reserved.
 //
 // Software that is described herein is for illustrative purposes only
@@ -58,14 +58,6 @@ extern "C" {
 extern void SystemInit(void);
 #endif
 
-// Patch the AEABI integer divide functions to use MCU's romdivide library
-#ifdef __USE_ROMDIVIDE
-// Location in memory that holds the address of the ROM Driver table
-#define PTR_ROM_DRIVER_TABLE ((unsigned int *)(0x1FFF1FF8))
-// Variables to store addresses of idiv and udiv functions within MCU ROM
-unsigned int *pDivRom_idiv;
-unsigned int *pDivRom_uidiv;
-#endif
 
 //*****************************************************************************
 //
@@ -92,9 +84,11 @@ WEAK void IntDefaultHandler(void);
 //*****************************************************************************
 void SPI0_IRQHandler(void) ALIAS(IntDefaultHandler);
 void SPI1_IRQHandler(void) ALIAS(IntDefaultHandler);
+void DAC0_IRQHandler(void) ALIAS(IntDefaultHandler);
 void UART0_IRQHandler(void) ALIAS(IntDefaultHandler);
 void UART1_IRQHandler(void) ALIAS(IntDefaultHandler);
 void UART2_IRQHandler(void) ALIAS(IntDefaultHandler);
+void FAIM_IRQHandler(void) ALIAS(IntDefaultHandler);
 void I2C1_IRQHandler(void) ALIAS(IntDefaultHandler);
 void I2C0_IRQHandler(void) ALIAS(IntDefaultHandler);
 void SCT_IRQHandler(void) ALIAS(IntDefaultHandler);
@@ -111,14 +105,15 @@ void ADC_OVR_IRQHandler(void) ALIAS(IntDefaultHandler);
 void DMA_IRQHandler(void) ALIAS(IntDefaultHandler);
 void I2C2_IRQHandler(void) ALIAS(IntDefaultHandler);
 void I2C3_IRQHandler(void) ALIAS(IntDefaultHandler);
-void PIN_INT0_IRQHandler(void) ALIAS(IntDefaultHandler);
-void PIN_INT1_IRQHandler(void) ALIAS(IntDefaultHandler);
-void PIN_INT2_IRQHandler(void) ALIAS(IntDefaultHandler);
-void PIN_INT3_IRQHandler(void) ALIAS(IntDefaultHandler);
-void PIN_INT4_IRQHandler(void) ALIAS(IntDefaultHandler);
-void PIN_INT5_IRQHandler(void) ALIAS(IntDefaultHandler);
-void PIN_INT6_IRQHandler(void) ALIAS(IntDefaultHandler);
-void PIN_INT7_IRQHandler(void) ALIAS(IntDefaultHandler);
+void CTIMER0_IRQHandler(void) ALIAS(IntDefaultHandler);
+void PININT0_IRQHandler(void) ALIAS(IntDefaultHandler);
+void PININT1_IRQHandler(void) ALIAS(IntDefaultHandler);
+void PININT2_IRQHandler(void) ALIAS(IntDefaultHandler);
+void PININT3_IRQHandler(void) ALIAS(IntDefaultHandler);
+void PININT4_IRQHandler(void) ALIAS(IntDefaultHandler);
+void PININT5_IRQHandler(void) ALIAS(IntDefaultHandler);
+void PININT6_IRQHandler(void) ALIAS(IntDefaultHandler);
+void PININT7_IRQHandler(void) ALIAS(IntDefaultHandler);
 //*****************************************************************************
 //
 // The entry point for the application.
@@ -176,19 +171,19 @@ void (* const g_pfnVectors[])(void) = {
     PendSV_Handler,                         // The PendSV handler
     SysTick_Handler,                        // The SysTick handler
 
-    // Chip Level - LPC82x
-    SPI0_IRQHandler,                         // SPI0 controller
-    SPI1_IRQHandler,                         // SPI1 controller
-    0,                                       // Reserved
+    // Chip Level - LPC84x
+    SPI0_IRQHandler,                         // SPI0
+    SPI1_IRQHandler,                         // SPI1
+    DAC0_IRQHandler,                         // DAC0
     UART0_IRQHandler,                        // UART0
     UART1_IRQHandler,                        // UART1
     UART2_IRQHandler,                        // UART2
-    0,                                       // Reserved
+    FAIM_IRQHandler,                         // FAIM
     I2C1_IRQHandler,                         // I2C1 controller
     I2C0_IRQHandler,                         // I2C0 controller
     SCT_IRQHandler,                          // Smart Counter Timer
     MRT_IRQHandler,                          // Multi-Rate Timer
-    CMP_IRQHandler,                          // Comparator
+    CMP_IRQHandler,                          // Comparator shared slot with CAP Touch 
     WDT_IRQHandler,                          // Watchdog
     BOD_IRQHandler,                          // Brown Out Detect
     FLASH_IRQHandler,                        // Flash Interrupt
@@ -200,15 +195,15 @@ void (* const g_pfnVectors[])(void) = {
     DMA_IRQHandler,                          // DMA
     I2C2_IRQHandler,                         // I2C2 controller
     I2C3_IRQHandler,                         // I2C3 controller
-    0,                                       // Reserved
-    PIN_INT0_IRQHandler,                     // PIO INT0
-    PIN_INT1_IRQHandler,                     // PIO INT1
-    PIN_INT2_IRQHandler,                     // PIO INT2
-    PIN_INT3_IRQHandler,                     // PIO INT3
-    PIN_INT4_IRQHandler,                     // PIO INT4
-    PIN_INT5_IRQHandler,                     // PIO INT5
-    PIN_INT6_IRQHandler,                     // PIO INT6
-    PIN_INT7_IRQHandler,                     // PIO INT7
+    CTIMER0_IRQHandler,                      // Timer0
+    PININT0_IRQHandler,                      // PIO INT0
+    PININT1_IRQHandler,                      // PIO INT1
+    PININT2_IRQHandler,                      // PIO INT2
+    PININT3_IRQHandler,                      // PIO INT3
+    PININT4_IRQHandler,                      // PIO INT4
+    PININT5_IRQHandler,                      // PIO INT5 shared slot with DAC1
+    PININT6_IRQHandler,                      // PIO INT6 shared slot with UART3
+    PININT7_IRQHandler,                      // PIO INT7 shared slot with UART4
 }; /* End of g_pfnVectors */
 
 //*****************************************************************************
@@ -279,16 +274,6 @@ ResetISR(void) {
         SectionLen = *SectionTableAddr++;
         bss_init(ExeAddr, SectionLen);
     }
-
-    // Patch the AEABI integer divide functions to use MCU's romdivide library
-#ifdef __USE_ROMDIVIDE
-    // Get address of Integer division routines function table in ROM
-    unsigned int *div_ptr = (unsigned int *)((unsigned int *)*(PTR_ROM_DRIVER_TABLE))[4];
-    // Get addresses of integer divide routines in ROM
-    // These address are then used by the code in aeabi_romdiv_patch.s
-    pDivRom_idiv = (unsigned int *)div_ptr[0];
-    pDivRom_uidiv = (unsigned int *)div_ptr[1];
-#endif
 
 #if defined (__USE_CMSIS) || defined (__USE_LPCOPEN)
     SystemInit();
