@@ -9,7 +9,8 @@
 */
 
 #include "quadrature.h"
-#include "sct_lpc82x_addon.h"
+#include "sct.h"
+#include "syscon.h"
 #include "sct_generic_addon.h"
 
 /*
@@ -100,39 +101,39 @@ void sw_gate(void)
 
 uint32_t init_mcu(uint32_t setup)
 {
-	LPC_SYSCON->SYSAHBCLKCTRL |= 1<<7;				//enable access to SWM
-
 	//CLKOUT setup begin
 	//CLKOUT = main/1 @ P0.19
-	LPC_SYSCON->SYSAHBCLKCTRL |= 1<<7;				//enable SWM clock
+	LPC_SYSCON->SYSAHBCLKCTRL0 |= (GPIO0 | GPIO1 | SWM);				//enable access to SWM
 	LPC_SYSCON->CLKOUTDIV = 1;						//prepare CLKOUT/1
 	LPC_SYSCON->CLKOUTSEL = 3;						//CLKOUT =  main clock
+
+#if 0
 	LPC_SYSCON->CLKOUTUEN = 0;						//update CLKOUT...
 	LPC_SYSCON->CLKOUTUEN = 1;						//... selection
+#endif
+
 	//CLKOUT setup end
 	LPC_SWM->PINASSIGN11 = (LPC_SWM->PINASSIGN11 & ~(0xFF<<16)) | ((0*32+19)<<16);	//CLKOUT @ P0.19
-
-	LPC_SYSCON->SYSAHBCLKCTRL |= 1<<6;				//enable access to GPIOs
 
 	return 0;
 }
 
 uint32_t init_sct(uint32_t setup)
 {
-	LPC_SYSCON->SYSAHBCLKCTRL |= 1<<6;				//enable access to GPIOs
-	LPC_SYSCON->SYSAHBCLKCTRL |= 1<<18;				//enable access to IOCON
+	LPC_SYSCON->SYSAHBCLKCTRL0 |= (GPIO0 | GPIO1);				//enable access to GPIOs
+	LPC_SYSCON->SYSAHBCLKCTRL0 |= IOCON;				//enable access to IOCON
 
 	//SCT setup begin
-	LPC_SYSCON->SYSAHBCLKCTRL |= 1<<8;				//enable SCT clock...
-	LPC_SYSCON->PRESETCTRL &= ~(1<<8);				//... reset...
-	LPC_SYSCON->PRESETCTRL |= 1<<8;					//... release SCT
+	LPC_SYSCON->SYSAHBCLKCTRL0 |= SCT;				//enable SCT clock...
+	LPC_SYSCON->PRESETCTRL0 &= ~(SCT);				//... reset...
+	LPC_SYSCON->PRESETCTRL0 |= SCT;					//... release SCT
 
 	LPC_SWM->PINASSIGN6 = (LPC_SWM->PINASSIGN6 & ~(0xFF<<24)) | ((0*32+20)<<24);	//CTIN_0 @ P0.20 (QEI A)
-	LPC_INPUTMUX->SCT0_INMUX0 = 0;													//SCT0_PIN0 = SWM
+	LPC_INMUX_TRIGMUX->SCT0_INMUX0 = 0;													//SCT0_PIN0 = SWM
 	LPC_IOCON->PIO0_20 = (LPC_IOCON->PIO0_20 & ~(3<<3)) | 1<<5 | 0<<3;				//no PU/PD; enable hysteresis
 
 	LPC_SWM->PINASSIGN7 = (LPC_SWM->PINASSIGN7 & ~(0xFF<< 0)) | ((0*32+21)<< 0);	//CTIN_1 @ P0.21 (QEI B)
-	LPC_INPUTMUX->SCT0_INMUX1 = 1;													//SCT0_PIN1 = SWM
+	LPC_INMUX_TRIGMUX->SCT0_INMUX1 = 1;													//SCT0_PIN1 = SWM
 	LPC_IOCON->PIO0_21 = (LPC_IOCON->PIO0_21 & ~(3<<3)) | 1<<5 | 0<<3;				//no PU/PD; enable hysteresis
 
 	LPC_SWM->PINASSIGN7 = (LPC_SWM->PINASSIGN7 & ~(0xFF<<24)) | ((0*32+22)<<24);	//CTOUT_0 @ P0.22 (counting up indicator)
@@ -148,7 +149,7 @@ uint32_t init_sct(uint32_t setup)
 						0<<1 |					//System Clock Mode
 						1<<0;					//1x 32-bit counter
 
-	LPC_SCT0->CTRL_U = (1-1)<<5  | 1<<4  | 0<<3  | 1<<2  | 0<<1  | 0<<0;	//U: no prescaler,bidirectional,NA,halt,NA,count up
+	LPC_SCT0->CTRL = (1-1)<<5  | 1<<4  | 0<<3  | 1<<2  | 0<<1  | 0<<0;	//U: no prescaler,bidirectional,NA,halt,NA,count up
 	LPC_SCT0->EVEN = 0;	//disable all interrupts
 
 	//match register setup
