@@ -125,17 +125,17 @@ void adc_dma_init(void)
 
 void adc_dma_set_rate(uint32_t period_us)
 {
-	// Setup systick timer to set the ADC sampling rate
-	SysTick_Config((system_ahb_clk / 1000000) * period_us);
+  // Setup systick timer to set the ADC sampling rate
+  SysTick_Config((system_ahb_clk / 1000000) * period_us);
 
-	// Disable systick timer, call adc_dma_start() to start sampling
-	NVIC_DisableIRQ(SysTick_IRQn);
+  // Disable systick timer, call adc_dma_start() to start sampling
+  NVIC_DisableIRQ(SysTick_IRQn);
 }
 
 static void cfg_dma_xfer(uint32_t count)
 {
   // currently only support count = 1024 or 2*1024
-	uint32_t xfercfg = 1 << DMA_XFERCFG_CFGVALID |
+  uint32_t xfercfg = 1 << DMA_XFERCFG_CFGVALID |
                      // 1 << DMA_XFERCFG_CLRTRIG |
                      1 << DMA_XFERCFG_SETINTA |
                      0 << DMA_XFERCFG_SETINTB |
@@ -144,48 +144,48 @@ static void cfg_dma_xfer(uint32_t count)
                      1 << DMA_XFERCFG_DSTINC |
                      (DMA_BUFFER_SIZE - 1) << DMA_XFERCFG_XFERCOUNT;
 
-	if ( count > DMA_BUFFER_SIZE )
-	{
-	  // Second descriptor
-	  dma2ndDesc.xfercfg = xfercfg; // last descriptor has no reload bit set
-	  dma2ndDesc.source  = (uint32_t) &LPC_ADC->DAT[_channel];
-	  dma2ndDesc.dest    = (uint32_t) &adc_buffer[2 * DMA_BUFFER_SIZE - 1];
-	  dma2ndDesc.next    = 0;
-	}
+  if ( count > DMA_BUFFER_SIZE )
+  {
+    // Second descriptor
+    dma2ndDesc.xfercfg = xfercfg; // last descriptor has no reload bit set
+    dma2ndDesc.source  = (uint32_t) &LPC_ADC->DAT[_channel];
+    dma2ndDesc.dest    = (uint32_t) &adc_buffer[2 * DMA_BUFFER_SIZE - 1];
+    dma2ndDesc.next    = 0;
+  }
 
-	// Channel Descriptor, the first descriptor
-	// link 2nd descriptor to channel descriptor if needed
-	Chan_Desc_Table[0].source = (uint32_t) &LPC_ADC->DAT[_channel];
-	Chan_Desc_Table[0].dest = (uint32_t) &adc_buffer[DMA_BUFFER_SIZE - 1];
-	Chan_Desc_Table[0].next = ( count > DMA_BUFFER_SIZE ) ? ((uint32_t) &dma2ndDesc) : 0;
+  // Channel Descriptor, the first descriptor
+  // link 2nd descriptor to channel descriptor if needed
+  Chan_Desc_Table[0].source = (uint32_t) &LPC_ADC->DAT[_channel];
+  Chan_Desc_Table[0].dest = (uint32_t) &adc_buffer[DMA_BUFFER_SIZE - 1];
+  Chan_Desc_Table[0].next = ( count > DMA_BUFFER_SIZE ) ? ((uint32_t) &dma2ndDesc) : 0;
 
-	// Set the valid bit for channel 0 in the SETVALID register
-	LPC_DMA->SETVALID0 = 1 << 0;
+  // Set the valid bit for channel 0 in the SETVALID register
+  LPC_DMA->SETVALID0 = 1 << 0;
 
-	// Set XFERCFG register, which will put DMA into ready mode
-	// Set Reload bit, which will cause the DMA controller to fetch
-	// the 2nd descriptor in the next link.
-	LPC_DMA->CHANNEL[0].XFERCFG = xfercfg | ((count > DMA_BUFFER_SIZE) ? (1 << DMA_XFERCFG_RELOAD) : 0);
+  // Set XFERCFG register, which will put DMA into ready mode
+  // Set Reload bit, which will cause the DMA controller to fetch
+  // the 2nd descriptor in the next link.
+  LPC_DMA->CHANNEL[0].XFERCFG = xfercfg | ((count > DMA_BUFFER_SIZE) ? (1 << DMA_XFERCFG_RELOAD) : 0);
 }
 
 void adc_dma_start(void)
 {
-	// If DMA is busy, wait until it is finished
+  // If DMA is busy, wait until it is finished
   while ( adc_dma_busy() ) { }
 
-	// Enable sequence A interrupt to trigger DMA transfer
-	LPC_ADC->INTEN = (1 << SEQA_INTEN);
+  // Enable sequence A interrupt to trigger DMA transfer
+  LPC_ADC->INTEN = (1 << SEQA_INTEN);
 //	NVIC_DisableIRQ(ADC_THCMP_IRQn);
 
-	cfg_dma_xfer(2*DMA_BUFFER_SIZE);
+  cfg_dma_xfer(2*DMA_BUFFER_SIZE);
 
-	// Enable the systick timer to start sampling the ADC at the specified sample rate
-	NVIC_EnableIRQ(SysTick_IRQn);
+  // Enable the systick timer to start sampling the ADC at the specified sample rate
+  NVIC_EnableIRQ(SysTick_IRQn);
 }
 
 void adc_dma_start_with_threshold(uint16_t low, uint16_t high, uint8_t intmode)
 {
-	// If DMA is busy, wait until it is finished
+  // If DMA is busy, wait until it is finished
   while ( adc_dma_busy() ) { }
 
   // Threshold config
@@ -197,13 +197,13 @@ void adc_dma_start_with_threshold(uint16_t low, uint16_t high, uint8_t intmode)
   LPC_ADC->INTEN = (1 << SEQA_INTEN) | (intmode << (3 + 2*_channel));
 //  NVIC_EnableIRQ(ADC_THCMP_IRQn);
 
-	cfg_dma_xfer(DMA_BUFFER_SIZE);
+  cfg_dma_xfer(DMA_BUFFER_SIZE);
 
-	// Enable the systick timer to start sampling the ADC at the specified sample rate
-	NVIC_EnableIRQ(SysTick_IRQn);
+  // Enable the systick timer to start sampling the ADC at the specified sample rate
+  NVIC_EnableIRQ(SysTick_IRQn);
 
-	// Wait until DMA is finished, if the trigger does happen, do nothing
-	// Otherwise get another 1K sample
+  // Wait until DMA is finished, if the trigger does happen, do nothing
+  // Otherwise get another 1K sample
   while ( adc_dma_busy() ) { }
 
   if (LPC_ADC->FLAGS & (1 << _channel))
@@ -241,17 +241,17 @@ void adc_dma_start_with_threshold(uint16_t low, uint16_t high, uint8_t intmode)
 
 void adc_dma_stop(void)
 {
-	// If DMA is busy, wait until it is finished
-	while ( adc_dma_busy() ) { }
+  // If DMA is busy, wait until it is finished
+  while ( adc_dma_busy() ) { }
 
-	// Disable the systick timer and stop sampling the ADC
-	NVIC_DisableIRQ(SysTick_IRQn);
+  // Disable the systick timer and stop sampling the ADC
+  NVIC_DisableIRQ(SysTick_IRQn);
 }
 
 void SysTick_Handler(void)
 {
-	// Get a new ADC sample using the START bit
-	LPC_ADC->SEQA_CTRL |= (1 << ADC_START);
+  // Get a new ADC sample using the START bit
+  LPC_ADC->SEQA_CTRL |= (1 << ADC_START);
 }
 
 bool adc_dma_busy(void)
@@ -261,24 +261,24 @@ bool adc_dma_busy(void)
 
 void DMA_IRQHandler(void)
 {
-	// When the DMA hits 1024, this ISR is called
-	// Currently there are 2 1KB DMA transfers linked together.
-	// Therefore this function will be called twice to fill the 2KB buffer
+  // When the DMA hits 1024, this ISR is called
+  // Currently there are 2 1KB DMA transfers linked together.
+  // Therefore this function will be called twice to fill the 2KB buffer
 
-	uint32_t intsts = LPC_DMA->INTA0; // Get the interrupt A flag
+  uint32_t intsts = LPC_DMA->INTA0; // Get the interrupt A flag
 
-	// CH0 is active
-	if (intsts & 1UL)
-	{
-	}
+  // CH0 is active
+  if (intsts & 1UL)
+  {
+  }
 
-	LPC_DMA->INTA0 = intsts; // Clear interrupt
+  LPC_DMA->INTA0 = intsts; // Clear interrupt
 
-	// End of DMA descriptor chain, disable timer ADC trigger
-	if ( ! (LPC_DMA->CHANNEL[0].XFERCFG & (1 << DMA_XFERCFG_CFGVALID)) )
-	{
-	  NVIC_DisableIRQ(SysTick_IRQn);
-	}
+  // End of DMA descriptor chain, disable timer ADC trigger
+  if ( ! (LPC_DMA->CHANNEL[0].XFERCFG & (1 << DMA_XFERCFG_CFGVALID)) )
+  {
+    NVIC_DisableIRQ(SysTick_IRQn);
+  }
 }
 
 // Enable if need to determine the sample that trigger threshold interrupt
