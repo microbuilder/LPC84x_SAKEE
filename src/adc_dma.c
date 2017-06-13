@@ -37,77 +37,77 @@ const uint8_t _channel = 2;
 
 void adc_dma_init(void)
 {
-	/*------------- ADC -------------*/
-	// Power up and reset the ADC, enable clocks to peripherals
-	LPC_SYSCON->PDRUNCFG &= ~(ADC_PD);		// Power up the ADC
-	LPC_SYSCON->SYSAHBCLKCTRL0 |= (ADC);		// Enable the ADC
-	LPC_SYSCON->PRESETCTRL0 &= (ADC_RST_N);	// Reset the ADC
-	LPC_SYSCON->PRESETCTRL0 |= ~(ADC_RST_N);
+  /*------------- ADC -------------*/
+  // Power up and reset the ADC, enable clocks to peripherals
+  LPC_SYSCON->PDRUNCFG &= ~(ADC_PD);		// Power up the ADC
+  LPC_SYSCON->SYSAHBCLKCTRL0 |= (ADC);		// Enable the ADC
+  LPC_SYSCON->PRESETCTRL0 &= (ADC_RST_N);	// Reset the ADC
+  LPC_SYSCON->PRESETCTRL0 |= ~(ADC_RST_N);
 
-	// Perform a self-calibration
-	LPC_ADC->CTRL = (1 << ADC_CALMODE)  |
-			            (0 << ADC_LPWRMODE) |
-			            (0 << ADC_CLKDIV);
+  // Perform a self-calibration
+  LPC_ADC->CTRL = (1 << ADC_CALMODE)  |
+                  (0 << ADC_LPWRMODE) |
+                  (0 << ADC_CLKDIV);
 
-	// Poll the calibration mode bit until it is cleared
-	while ( LPC_ADC->CTRL & (1 << ADC_CALMODE) ) { }
+  // Poll the calibration mode bit until it is cleared
+  while ( LPC_ADC->CTRL & (1 << ADC_CALMODE) ) { }
 
-	// Configure clock div
-	LPC_ADC->CTRL = (0 << ADC_CALMODE)  |
-			            (0 << ADC_LPWRMODE) |
-			            (0 << ADC_CLKDIV);
+  // Configure clock div
+  LPC_ADC->CTRL = (0 << ADC_CALMODE)  |
+                  (0 << ADC_LPWRMODE) |
+                  (0 << ADC_CLKDIV);
 
-	// Configure the ADC for the appropriate analog supply voltage using the
-	// TRM register. For a sampling rate higher than 1 Msamples/s, VDDA must
-	// be higher than 2.7 V (on the Max board it is 3.3 V)
-	LPC_ADC->TRM &= ~(1 << ADC_VRANGE);  // '0' for high voltage
+  // Configure the ADC for the appropriate analog supply voltage using the
+  // TRM register. For a sampling rate higher than 1 Msamples/s, VDDA must
+  // be higher than 2.7 V (on the Max board it is 3.3 V)
+  LPC_ADC->TRM &= ~(1 << ADC_VRANGE);  // '0' for high voltage
 
-	// Write the sequence control word
-	LPC_ADC->SEQA_CTRL = 0 << ADC_TRIGGER | // SW trigger, if using hw timer
-					             1 << ADC_MODE    | // End of sequence
-					             1 << _channel;     // Select channel
+  // Write the sequence control word
+  LPC_ADC->SEQA_CTRL = 0 << ADC_TRIGGER | // SW trigger, if using hw timer
+                       1 << ADC_MODE    | // End of sequence
+                       1 << _channel;     // Select channel
 
-	// Sequence B not used
-	LPC_ADC->SEQB_CTRL = 0x00;
+  // Sequence B not used
+  LPC_ADC->SEQB_CTRL = 0x00;
 
-	// Configure the SWM (see utilities_lib and lpc8xx_swm.h)
-	LPC_SYSCON->SYSAHBCLKCTRL0 |= SWM;
+  // Configure the SWM (see utilities_lib and lpc8xx_swm.h)
+  LPC_SYSCON->SYSAHBCLKCTRL0 |= SWM;
 
-	// Configure ADC pin on the LPC845,
-	LPC_SWM->PINENABLE0 &= ~(ADC_N(_channel));
+  // Configure ADC pin on the LPC845,
+  LPC_SWM->PINENABLE0 &= ~(ADC_N(_channel));
 
-	// Clear Interrupt Flags
-	LPC_ADC->FLAGS |= LPC_ADC->FLAGS;
+  // Clear Interrupt Flags
+  LPC_ADC->FLAGS |= LPC_ADC->FLAGS;
 
-	// Enable sequence A interrupt to trigger DMA transfer
-	LPC_ADC->INTEN = (1 << SEQA_INTEN);
+  // Enable sequence A interrupt to trigger DMA transfer
+  LPC_ADC->INTEN = (1 << SEQA_INTEN);
 
-	// Enable Sequence A
-	LPC_ADC->SEQA_CTRL |= (1UL << ADC_SEQ_ENA);
+  // Enable Sequence A
+  LPC_ADC->SEQA_CTRL |= (1UL << ADC_SEQ_ENA);
 
-	/*------------- DMA -------------*/
+  /*------------- DMA -------------*/
 
-	// Reset the DMA, and enable peripheral clocks
-	LPC_SYSCON->PRESETCTRL0 &= (DMA_RST_N);
-	LPC_SYSCON->PRESETCTRL0 |= ~(DMA_RST_N);
-	LPC_SYSCON->SYSAHBCLKCTRL0 |= DMA;
+  // Reset the DMA, and enable peripheral clocks
+  LPC_SYSCON->PRESETCTRL0 &= (DMA_RST_N);
+  LPC_SYSCON->PRESETCTRL0 |= ~(DMA_RST_N);
+  LPC_SYSCON->SYSAHBCLKCTRL0 |= DMA;
 
-	// Set the master DMA controller enable bit in the CTRL register
-	LPC_DMA->CTRL = 1;
+  // Set the master DMA controller enable bit in the CTRL register
+  LPC_DMA->CTRL = 1;
 
-	// Point the SRAMBASE register to the beginning of the channel descriptor SRAM table
-	LPC_DMA->SRAMBASE = (uint32_t) (&Chan_Desc_Table);
+  // Point the SRAMBASE register to the beginning of the channel descriptor SRAM table
+  LPC_DMA->SRAMBASE = (uint32_t) (&Chan_Desc_Table);
 
-	// Enable DMA channel 0 in the ENABLE register
-	LPC_DMA->ENABLESET0 = 1 << 0;
+  // Enable DMA channel 0 in the ENABLE register
+  LPC_DMA->ENABLESET0 = 1 << 0;
 
-	// Enable the channel 0 interrupt in the INTEN register
-	LPC_DMA->INTA0 |= LPC_DMA->INTA0;
-	LPC_DMA->INTB0 |= LPC_DMA->INTB0;
-	LPC_DMA->INTENSET0 = 1 << 0;
+  // Enable the channel 0 interrupt in the INTEN register
+  LPC_DMA->INTA0 |= LPC_DMA->INTA0;
+  LPC_DMA->INTB0 |= LPC_DMA->INTB0;
+  LPC_DMA->INTENSET0 = 1 << 0;
 
-	// Configure the DMA channel
-	LPC_DMA->CHANNEL[0].CFG = 1 << DMA_CFG_HWTRIGEN     |		// HW triggered by ADC
+  // Configure the DMA channel
+  LPC_DMA->CHANNEL[0].CFG = 1 << DMA_CFG_HWTRIGEN     |		// HW triggered by ADC
                             0 << DMA_CFG_TRIGTYPE     |
                             1 << DMA_CFG_TRIGPOL      |
                             1 << DMA_CFG_TRIGBURST    |		// Burst mode required
@@ -116,11 +116,11 @@ void adc_dma_init(void)
                             0 << DMA_CFG_DSTBURSTWRAP |
                             0 << DMA_CFG_CHPRIORITY;
 
-	// Use ADC Seq A to trigger DMA0
-	LPC_INMUX_TRIGMUX->DMA_ITRIG_INMUX0 = 0;
+  // Use ADC Seq A to trigger DMA0
+  LPC_INMUX_TRIGMUX->DMA_ITRIG_INMUX0 = 0;
 
-	// Enable the DMA interrupt in the NVIC
-	NVIC_EnableIRQ(DMA_IRQn);
+  // Enable the DMA interrupt in the NVIC
+  NVIC_EnableIRQ(DMA_IRQn);
 }
 
 void adc_dma_set_rate(uint32_t period_us)
