@@ -62,7 +62,7 @@ uint32_t init_sct(uint32_t _setup);
 uint32_t init_qei(uint32_t state);
 uint32_t qei_rotate(uint32_t * pnt_qei_state, uint32_t direction, uint32_t steps);
 
-#define LED_PIN		(16)
+#define LED_PIN		(0)
 
 void quadrature_init(void)
 {
