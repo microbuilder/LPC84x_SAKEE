@@ -10,7 +10,7 @@
 
 #include "LPC8xx.h"
 #include "core_cm0plus.h"
-#include "lpc8xx_syscon.h"
+#include "syscon.h"
 #include "utilities.h"
 
 #include "delay.h"

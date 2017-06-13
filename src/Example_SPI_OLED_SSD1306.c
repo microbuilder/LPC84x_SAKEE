@@ -14,9 +14,9 @@
 
 #include "LPC8xx.h"
 #include "core_cm0plus.h"
-#include "lpc8xx_syscon.h"
-#include "lpc8xx_gpio.h"
-#include "lpc8xx_swm.h"
+#include "syscon.h"
+#include "gpio.h"
+#include "swm.h"
 
 #include "ssd1306.h"
 #include "delay.h"
