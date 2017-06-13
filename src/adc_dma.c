@@ -37,7 +37,9 @@ ALIGN(512) DMA_CHDESC_T Chan_Desc_Table[NUM_DMA_CHANNELS];
 ALIGN(16) DMA_RELOADDESC_T dma2ndDesc;
 
 // ADC channel to use
-volatile uint8_t _channel = 3;
+const uint8_t _channel = 2;
+#define ADC_N(_n)    (1 << (14+(_n)))
+
 
 void adc_dma_init(void)
 {
@@ -77,9 +79,8 @@ void adc_dma_init(void)
 	// Configure the SWM (see utilities_lib and lpc8xx_swm.h)
 	LPC_SYSCON->SYSAHBCLKCTRL0 |= SWM;
 
-	// Configure ADC3 (P0_23) on the LPC824,
-	// which corresponds to pin A2 on the Arduino headers.
-	LPC_SWM->PINENABLE0 &= ~(ADC_3);	// Enable ADC3 on P0_23
+	// Configure ADC pin on the LPC845,
+	LPC_SWM->PINENABLE0 &= ~(ADC_N(_channel));
 
 	// Clear Interrupt Flags
 	LPC_ADC->FLAGS |= LPC_ADC->FLAGS;

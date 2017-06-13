@@ -26,7 +26,7 @@
 #include "adc_dma.h"
 #include "quadrature.h"
 
-#define LED_PIN		(P0_16)
+#define LED_PIN		(P0_0)
 
 /*
  Pins used in this application:
@@ -34,13 +34,32 @@
  OLED Display
  LPC    ARD   Description
  -----  ---   -----------
- P0.24	D13	  OLED SCK
- P0.26	D11	  OLED Data/MOSI
- P0.15	D10	  OLED CS
- P0.08	D8	  OLED Reset
- P0.17	D7	  OLED Data/Command Select
+ P0.6	  D13	  OLED SCK
+ P1.19	D11	  OLED Data/MOSI
+ P1.18	D10	  OLED CS
+ P0.16	D8	  OLED Reset
+ P0.1	  D7	  OLED Data/Command Select
 
- QUADRATURE DECODER
+ SCT QEI and ADC
+ LPC    ARD   Description
+ -----  ---   -----------
+ P0.20  D3    SCT_IN0: QEI0 phA
+ P0.21  D2    SCT_IN1: QEI0 phB
+ P1.21  D4	  Optional: CLKOUT (can be disabled by setting SCT_ADC_DEBUG to 0)
+
+ DMA ADC
+ LPC    ARD   Description
+ -----  ---   -----------
+ P0.14  A0    Analog Input - ADC2
+ P0.23  A1    Optional: SCT_OUT3 - ADC Sample Trigger (can be disabled by setting SCT_ADC_DEBUG to 0)
+
+ LEDS
+ LPC    ARD   Description
+ -----  ---   -----------
+ P0.0  	--	  Debug LED (GREEN)
+
+
+ QUADRATURE DECODER (obsolete)
  LPC    ARD   Description
  -----  ---   -----------
  P0.19	D2	  SCT Quad Clock Out
@@ -49,16 +68,6 @@
  P0.22	A3	  SCT Quad Dir Indicator
  P0.26	D11	  SCT Quad Test Synchro Pulse (Conflict with OLED but not used in production)
  P0.27	D9	  SCT Quad ISR Indicator (BLUE LED)
-
- DMA ADC
- LPC    ARD   Description
- -----  ---   -----------
- P0.23	A2	  DMA based ADC3
-
- LEDS
- LPC    ARD   Description
- -----  ---   -----------
- P0.16	--	  Debug LED (GREEN)
 */
 
 int main(void)
@@ -89,14 +98,8 @@ int main(void)
 	// Stop sampling
 	//adc_dma_stop();
 
-    // Initialize the SSD1306 display
+	// Initialize the SSD1306 display
 	//ssd1306_init();
-
-	// Perform some GFX tests
-	//while(1)
-	//{
-	//    gfx_tester_run();
-	//}
 
 	// Blinky Loop
 	while(1)
