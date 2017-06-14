@@ -39,7 +39,7 @@ ssd1306_command(uint8_t cmd)
     LPC_SPI1->TXCTL &= ~(CTL_EOT);                      // Start a new transfer, clear the EOT bit
     while ((LPC_SPI1->STAT & STAT_TXRDY) == 0);  	    // Wait for master TXRDY
     LPC_SPI1->TXDAT = cmd;                       	    // Write the cmd byte to the master's TXDAT register, start the frame
-    LPC_SPI1->TXCTL |= CTL_EOT;
+    //LPC_SPI1->TXCTL |= CTL_EOT;
 	LPC_GPIO_PORT->SET1 = (1 << (SSD1306_SSELPIN%32));	// CS HIGH
 
 	return 0;
@@ -99,7 +99,7 @@ ssd1306_pin_setup(void)
 
 	// Configure the SPI control register
 	// Master: End-of-frame true, End-of-transfer true, RXIGNORE true, LEN 8 bits.
-	LPC_SPI1->TXCTL = CTL_EOF | CTL_EOT | CTL_RXIGNORE | CTL_LEN(8);
+	LPC_SPI1->TXCTL = CTL_EOF | CTL_RXIGNORE | CTL_LEN(8); // Removed CTL_EOT!
 
 	return 0;
 }
@@ -136,12 +136,14 @@ ssd1306_config_display()
 	ssd1306_command(SSD1306_NORMALDISPLAY);
 	ssd1306_command(SSD1306_DEACTIVATE_SCROLL);
 
+	/*
 	ssd1306_command(SSD1306_COLUMNADDR);
 	ssd1306_command(0);
 	ssd1306_command(SSD1306_WIDTH-1);
 	ssd1306_command(SSD1306_PAGEADDR);
 	ssd1306_command(0);
 	ssd1306_command(SSD1306_HEIGHT/8-1);
+	*/
 
 	// Turn the OLED display on!
 	ssd1306_command(SSD1306_DISPLAYON);
@@ -235,6 +237,8 @@ ssd1306_refresh(void)
         LPC_SPI1->TXDAT = buffer[i];				// Write the cmd byte to the master's TXDAT register
     }
 	LPC_GPIO_PORT->SET1 = (1 << (SSD1306_SSELPIN%32));	// Deassert CS
+
+	delay_ms(50);
 
 	return 0;
 }

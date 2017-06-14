@@ -25,4 +25,7 @@ void adc_dma_start(void);
 void adc_dma_start_with_threshold(uint16_t low, uint16_t high, uint8_t mode);
 void adc_dma_stop(void);
 
+uint16_t *adc_dma_get_buffer(void);
+int16_t adc_dma_get_threshold_sample(void);
+
 #endif /* ADC_DMA_H_ */

@@ -25,6 +25,9 @@
 // Should be a multiple of 1024 (DMA_BUFFER_SIZE)
 uint16_t adc_buffer[2 * DMA_BUFFER_SIZE];
 
+// Used to track the sample that caused the threshold interrupt to fire
+volatile int16_t _adc_dma_trigger_offset;
+
 // Instantiate the channel descriptor table, which must be 512-byte aligned (see lpc8xx_dma.h)
 ALIGN(512) DMA_CHDESC_T Chan_Desc_Table[NUM_DMA_CHANNELS];
 
@@ -203,7 +206,7 @@ void adc_dma_start(void)
 
   // Enable sequence A interrupt to trigger DMA transfer
   LPC_ADC->INTEN = (1 << SEQA_INTEN);
-//	NVIC_DisableIRQ(ADC_THCMP_IRQn);
+  //NVIC_DisableIRQ(ADC_THCMP_IRQn);
 
   cfg_dma_xfer(2*DMA_BUFFER_SIZE);
 
@@ -222,6 +225,8 @@ void adc_dma_start_with_threshold(uint16_t low, uint16_t high, uint8_t mode)
   // If DMA is busy, wait until it is finished
   while ( adc_dma_busy() ) { }
 
+  _adc_dma_trigger_offset = -1;
+
   // Threshold config
   LPC_ADC->THR0_LOW    = low << 4;
   LPC_ADC->THR0_HIGH   = high << 4;
@@ -229,7 +234,7 @@ void adc_dma_start_with_threshold(uint16_t low, uint16_t high, uint8_t mode)
 
   LPC_ADC->FLAGS |= (1 << _channel); // clear THCMP interrupt
   LPC_ADC->INTEN = (1 << SEQA_INTEN) | (mode << (3 + 2*_channel));
-//  NVIC_EnableIRQ(ADC_THCMP_IRQn);
+  NVIC_EnableIRQ(ADC_THCMP_IRQn);
 
   // blocking wait for threshold event
   // TODO add timeout
@@ -292,6 +297,18 @@ bool adc_dma_busy(void)
   return LPC_DMA->CHANNEL[0].XFERCFG & (1 << DMA_XFERCFG_CFGVALID);
 }
 
+// Return the sample that cause the threshold interrupt to fire
+int16_t adc_dma_get_threshold_sample(void)
+{
+	return _adc_dma_trigger_offset;
+}
+
+
+uint16_t *adc_dma_get_buffer()
+{
+	return adc_buffer;
+}
+
 void DMA_IRQHandler(void)
 {
   // When the DMA hits 1024, this ISR is called
@@ -315,20 +332,22 @@ void DMA_IRQHandler(void)
   }
 }
 
-// Enable if need to determine the sample that trigger threshold interrupt
-#if 0
+// This interrupt handler determines the sample that triggered the threshold interrupt
 void ADC_THCMP_IRQHandler(void)
 {
-  // only care threshold of our channel
+  // Only check the threshold interrupt status of our ADC channel
   uint32_t intsts = (LPC_ADC->FLAGS & (1 << _channel)) ;
 
   if ( intsts )
   {
-    // sample that causes interrupt is (DMA_BUFFER_SIZE-1) - current XFERCFG0.XFERCOUNT - 1
+    // The sample that caused the interrupt
+	uint16_t offset_countdown = ((LPC_DMA->CHANNEL[0].XFERCFG & 0x3FF0000) >> 16) - 1;
+    _adc_dma_trigger_offset = (DMA_BUFFER_SIZE-1) - offset_countdown;
+    // Disable the interrupt
+    NVIC_DisableIRQ(ADC_THCMP_IRQn);
     // Mark 2nd Descriptor as valid
-    // LPC_DMA->CHANNEL[0].XFERCFG & 0xFFFF0000
+    // LPC_DMA->CHANNEL[0].XFERCFG & 0xFFFF0000;
   }
 
   LPC_ADC->FLAGS = intsts; // clear interrupts
 }
-#endif
