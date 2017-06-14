@@ -15,9 +15,6 @@
 
 #include "delay.h"
 
-// Systick is currently used to trigger ADC, enable later using another hw timer
-#if 0
-
 volatile uint32_t g_delay_ms_ticks = 0;
 
 void
@@ -45,4 +42,3 @@ delay_init(uint32_t interval)
 	NVIC_EnableIRQ(SysTick_IRQn);
 	return SysTick_Config(interval);
 }
-#endif
