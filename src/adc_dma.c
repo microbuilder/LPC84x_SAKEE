@@ -17,6 +17,7 @@
 #include "swm.h"
 #include "adc.h"
 #include "dma.h"
+#include "mrt.h"
 
 #include "adc_dma.h"
 
@@ -37,12 +38,12 @@ const uint8_t _channel = 2;
 
 static inline void enable_sample_timer(void)
 {
-  NVIC_EnableIRQ(SysTick_IRQn);
+  NVIC_EnableIRQ(MRT_IRQn);
 }
 
 static inline void disable_sample_timer(void)
 {
-  NVIC_DisableIRQ(SysTick_IRQn);
+  NVIC_DisableIRQ(MRT_IRQn);
 }
 
 void adc_dma_init(void)
@@ -131,15 +132,32 @@ void adc_dma_init(void)
 
   // Enable the DMA interrupt in the NVIC
   NVIC_EnableIRQ(DMA_IRQn);
+
+  // Setup MRT as sampling timer
+  LPC_SYSCON->SYSAHBCLKCTRL0 |= MRT;
+
+  LPC_SYSCON->PRESETCTRL0 &= (MRT_RST_N);
+  LPC_SYSCON->PRESETCTRL0 |= ~(MRT_RST_N);
+
+  // Mode = repeat, interrupt = enable
+  LPC_MRT->Channel[0].CTRL = (MRT_Repeat<<MRT_MODE) | (1<<MRT_INTEN);
 }
 
 void adc_dma_set_rate(uint32_t period_us)
 {
-  // Setup systick timer to set the ADC sampling rate
-  SysTick_Config((system_ahb_clk / 1000000) * period_us);
+  LPC_MRT->Channel[0].INTVAL = (system_ahb_clk / 1000000) * period_us;
 
   // Disable sampling timer
   disable_sample_timer();
+}
+
+void MRT_IRQHandler(void)
+{
+  // Get a new ADC sample using the START bit
+  LPC_ADC->SEQA_CTRL |= (1 << ADC_START);
+
+  // clear interrupt
+  LPC_MRT->IRQ_FLAG |= LPC_MRT->IRQ_FLAG;
 }
 
 static void cfg_dma_xfer(uint32_t count)
@@ -267,12 +285,6 @@ void adc_dma_stop(void)
 
   // Disable sampling timer
   disable_sample_timer();
-}
-
-void SysTick_Handler(void)
-{
-  // Get a new ADC sample using the START bit
-  LPC_ADC->SEQA_CTRL |= (1 << ADC_START);
 }
 
 bool adc_dma_busy(void)
