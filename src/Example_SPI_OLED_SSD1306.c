@@ -51,23 +51,11 @@
  LPC    ARD   Description
  -----  ---   -----------
  P0.14  A0    Analog Input - ADC2
- P0.23  A1    Optional: SCT_OUT3 - ADC Sample Trigger (can be disabled by setting SCT_ADC_DEBUG to 0)
 
  LEDS
  LPC    ARD   Description
  -----  ---   -----------
  P0.0  	--	  Debug LED (GREEN)
-
-
- QUADRATURE DECODER (obsolete)
- LPC    ARD   Description
- -----  ---   -----------
- P0.19	D2	  SCT Quad Clock Out
- P0.20	A5	  SCT Quad PHA
- P0.21	A4	  SCT Quad PHB
- P0.22	A3	  SCT Quad Dir Indicator
- P0.26	D11	  SCT Quad Test Synchro Pulse (Conflict with OLED but not used in production)
- P0.27	D9	  SCT Quad ISR Indicator (BLUE LED)
 */
 
 int main(void)

@@ -35,6 +35,16 @@ ALIGN(16) DMA_RELOADDESC_T dma2ndDesc;
 const uint8_t _channel = 2;
 #define ADC_N(_n)    (1 << (14+(_n)))
 
+static inline void enable_sample_timer(void)
+{
+  NVIC_EnableIRQ(SysTick_IRQn);
+}
+
+static inline void disable_sample_timer(void)
+{
+  NVIC_DisableIRQ(SysTick_IRQn);
+}
+
 void adc_dma_init(void)
 {
   /*------------- ADC -------------*/
@@ -128,8 +138,8 @@ void adc_dma_set_rate(uint32_t period_us)
   // Setup systick timer to set the ADC sampling rate
   SysTick_Config((system_ahb_clk / 1000000) * period_us);
 
-  // Disable systick timer, call adc_dma_start() to start sampling
-  NVIC_DisableIRQ(SysTick_IRQn);
+  // Disable sampling timer
+  disable_sample_timer();
 }
 
 static void cfg_dma_xfer(uint32_t count)
@@ -179,11 +189,17 @@ void adc_dma_start(void)
 
   cfg_dma_xfer(2*DMA_BUFFER_SIZE);
 
-  // Enable the systick timer to start sampling the ADC at the specified sample rate
-  NVIC_EnableIRQ(SysTick_IRQn);
+  // Start sampling using hardware timer
+  enable_sample_timer();
 }
 
-void adc_dma_start_with_threshold(uint16_t low, uint16_t high, uint8_t intmode)
+/**
+ *
+ * @param low
+ * @param high
+ * @param mode 0 = disabled, 1 = outside threshold, 2 = crossing threshold
+ */
+void adc_dma_start_with_threshold(uint16_t low, uint16_t high, uint8_t mode)
 {
   // If DMA is busy, wait until it is finished
   while ( adc_dma_busy() ) { }
@@ -194,13 +210,13 @@ void adc_dma_start_with_threshold(uint16_t low, uint16_t high, uint8_t intmode)
   LPC_ADC->CHAN_THRSEL = (0 << _channel); // select threshold 0
 
   LPC_ADC->FLAGS |= (1 << _channel); // clear THCMP interrupt
-  LPC_ADC->INTEN = (1 << SEQA_INTEN) | (intmode << (3 + 2*_channel));
+  LPC_ADC->INTEN = (1 << SEQA_INTEN) | (mode << (3 + 2*_channel));
 //  NVIC_EnableIRQ(ADC_THCMP_IRQn);
 
   cfg_dma_xfer(DMA_BUFFER_SIZE);
 
-  // Enable the systick timer to start sampling the ADC at the specified sample rate
-  NVIC_EnableIRQ(SysTick_IRQn);
+  // Start sampling using hardware timer
+  enable_sample_timer();
 
   // Wait until DMA is finished, if the trigger does happen, do nothing
   // Otherwise get another 1K sample
@@ -234,8 +250,8 @@ void adc_dma_start_with_threshold(uint16_t low, uint16_t high, uint8_t intmode)
     // Set XFERCFG register, which will put DMA into ready mode
     LPC_DMA->CHANNEL[0].XFERCFG = xfercfg;
 
-    // Enable the systick timer to start sampling the ADC at the specified sample rate
-    NVIC_EnableIRQ(SysTick_IRQn);
+    // Start sampling using hardware timer
+    enable_sample_timer();
   }
 }
 
@@ -244,8 +260,8 @@ void adc_dma_stop(void)
   // If DMA is busy, wait until it is finished
   while ( adc_dma_busy() ) { }
 
-  // Disable the systick timer and stop sampling the ADC
-  NVIC_DisableIRQ(SysTick_IRQn);
+  // Disable sampling timer
+  disable_sample_timer();
 }
 
 void SysTick_Handler(void)
@@ -277,7 +293,8 @@ void DMA_IRQHandler(void)
   // End of DMA descriptor chain, disable timer ADC trigger
   if ( ! (LPC_DMA->CHANNEL[0].XFERCFG & (1 << DMA_XFERCFG_CFGVALID)) )
   {
-    NVIC_DisableIRQ(SysTick_IRQn);
+    // Disable sampling timer
+    disable_sample_timer();
   }
 }
 
