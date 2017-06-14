@@ -213,20 +213,25 @@ void adc_dma_start_with_threshold(uint16_t low, uint16_t high, uint8_t mode)
   LPC_ADC->INTEN = (1 << SEQA_INTEN) | (mode << (3 + 2*_channel));
 //  NVIC_EnableIRQ(ADC_THCMP_IRQn);
 
-  cfg_dma_xfer(DMA_BUFFER_SIZE);
+  // blocking wait for threshold event
+  // TODO add timeout
+  while ( ! (LPC_ADC->FLAGS & (1 << _channel)) )
+  {
+    cfg_dma_xfer(DMA_BUFFER_SIZE);
 
-  // Start sampling using hardware timer
-  enable_sample_timer();
+    // Start sampling using hardware timer
+    enable_sample_timer();
 
-  // Wait until DMA is finished, if the trigger does happen, do nothing
-  // Otherwise get another 1K sample
-  while ( adc_dma_busy() ) { }
+    // Wait until DMA is finished
+    while ( adc_dma_busy() ) { }
+  }
 
+  // Get another 1K sample if the trigger occurs
   if (LPC_ADC->FLAGS & (1 << _channel))
   {
     LPC_ADC->FLAGS |= (1 << _channel); // clear THCMP interrupt
 
-    // Continue to sample another 1K
+    // Continue to sample another 1K in the second buffer
     LPC_ADC->INTEN = (1 << SEQA_INTEN);
 
     // DMA transfer config
