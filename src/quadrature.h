@@ -20,6 +20,7 @@
 #include "LPC8xx.h"
 
 void quadrature_init(void);
+//uint32_t void quadrature_
 
 
 #ifdef __cplusplus

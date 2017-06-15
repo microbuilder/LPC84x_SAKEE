@@ -25,12 +25,10 @@
  P0.27 [O] - GPO: SCT isr indicator
  */
 
-volatile uint32_t i, j;
 volatile uint32_t user_gate_pattern, user_gate_counter;
-volatile uint32_t dummy_32b;
 volatile uint32_t qei_state;
-volatile uint32_t sct_isr_count;
-volatile uint32_t sw_qei_count, sw_qei_max;
+
+volatile int16_t  sw_qei_count;
 
 enum sct_in			{sct_in_qei_A = 0, sct_in_qei_B};
 enum sct_out		{sct_out_qei_direction = 0};
@@ -57,8 +55,8 @@ enum sct_event	    {sct_ev_qei00_A_re = 0, sct_ev_qei00_B_re,
 #define QEI_B_HIGH QEI_B_RE
 #define QEI_B_LOW  QEI_B_FE
 
-uint32_t init_mcu(uint32_t _setup);
-uint32_t init_sct(uint32_t _setup);
+uint32_t init_mcu(void);
+uint32_t init_sct(void);
 uint32_t init_qei(uint32_t state);
 uint32_t qei_rotate(uint32_t * pnt_qei_state, uint32_t direction, uint32_t steps);
 
@@ -66,23 +64,15 @@ uint32_t qei_rotate(uint32_t * pnt_qei_state, uint32_t direction, uint32_t steps
 
 void quadrature_init(void)
 {
-	init_mcu(0);
+	init_mcu();
+
+
+	QEI_A_LOW;
+	QEI_B_LOW;
+
+	init_sct();
 
 	sw_qei_count = 0;
-	sw_qei_max = 27;
-
-	qei_state = 0;
-	init_qei(qei_state);
-	init_sct(0);
-
-//	while(1)
-//	{
-//		//generate CW sequence
-//		qei_rotate((uint32_t *) &qei_state, QEI_CW, 15);
-//
-//		//generate CCW sequence
-//		qei_rotate((uint32_t *) &qei_state, QEI_CCW, 8);
-//	}
 }
 
 void sw_gate(void)
@@ -99,7 +89,7 @@ void sw_gate(void)
 	return;
 }
 
-uint32_t init_mcu(uint32_t setup)
+uint32_t init_mcu(void)
 {
 	//CLKOUT setup begin
 	//CLKOUT = main/1 @ P0.19
@@ -118,7 +108,7 @@ uint32_t init_mcu(uint32_t setup)
 	return 0;
 }
 
-uint32_t init_sct(uint32_t setup)
+uint32_t init_sct(void)
 {
 	LPC_SYSCON->SYSAHBCLKCTRL0 |= (GPIO0 | GPIO1);				//enable access to GPIOs
 	LPC_SYSCON->SYSAHBCLKCTRL0 |= IOCON;				//enable access to IOCON
@@ -139,15 +129,15 @@ uint32_t init_sct(uint32_t setup)
 	LPC_SWM->PINASSIGN7 = (LPC_SWM->PINASSIGN7 & ~(0xFF<<24)) | ((0*32+22)<<24);	//CTOUT_0 @ P0.22 (counting up indicator)
 	LPC_IOCON->PIO0_22 = (LPC_IOCON->PIO0_22 & ~(3<<3)) | 1<<5 | 0<<3;				//no PU/PD; enable hysteresis
 
-	LPC_SCT0->CONFIG =  0<<18 |					//no autolimit H
-					    0<<17 |					//no autolimit L
-						(1<<sct_in_qei_A  |		//synchronize inputs...
-						1<<sct_in_qei_B)<<9  |	//...
-						1<<8 |					//do not reload H match registers
-						1<<7 |					//do not reload L match registers
-						0<<3 |					//NA
-						0<<1 |					//System Clock Mode
-						1<<0;					//1x 32-bit counter
+	LPC_SCT0->CONFIG =  0<<18               |					//no autolimit H
+                      0<<17               |					//no autolimit L
+                      (1<<sct_in_qei_A    |		//synchronize inputs...
+                      1<<sct_in_qei_B)<<9 |	//...
+                      1<<8                |					//do not reload H match registers
+                      1<<7                |					//do not reload L match registers
+                      0<<3                |					//NA
+                      0<<1                |					//System Clock Mode
+                      1<<0;					//1x 32-bit counter
 
 	LPC_SCT0->CTRL = (1-1)<<5  | 1<<4  | 0<<3  | 1<<2  | 0<<1  | 0<<0;	//U: no prescaler,bidirectional,NA,halt,NA,count up
 	LPC_SCT0->EVEN = 0;	//disable all interrupts
@@ -266,123 +256,27 @@ uint32_t init_sct(uint32_t setup)
 	return 0;
 }
 
-uint32_t init_qei(uint32_t state)
-{
-  uint32_t result;
-
-	switch (state)
-	{
-		case 0: QEI_A_LOW;
-		        QEI_B_LOW;
-		        break;
-		case 1: QEI_A_HIGH;
-		        QEI_B_LOW;
-				break;
-		case 2: QEI_A_LOW;
-		        QEI_B_HIGH;
-				break;
-		case 3:
-		default: QEI_A_HIGH;
-		      	QEI_B_HIGH;
-				break;
-	}
-
-	result = 0;
-
-	return result;
-}
-
-uint32_t qei_rotate(uint32_t * pnt_qei_state, uint32_t direction, uint32_t steps)
-{
-  uint32_t result;
-	uint32_t i_loc;
-	uint32_t qei_state_loc = *pnt_qei_state;
-
-	// direction: clock-wise/forward
-	if (direction == QEI_CW)
-	{
-		for (i_loc = 0; i_loc != steps; i_loc++)
-		{
-			switch (qei_state_loc)
-			{
-				case 0: QEI_A_RE;
-					      qei_state_loc = 1;
-								break;
-				case 1: QEI_B_RE;
-					      qei_state_loc = 3;
-								break;
-				case 2: QEI_B_FE;
-					      qei_state_loc = 0;
-								break;
-				case 3: QEI_A_FE;
-					      qei_state_loc = 2;
-								break;
-			}
-		}//qei cw/forward end
-	}
-	// direction: counter clock-wise/reverse
-	else
-	{
-		for (i_loc = 0; i_loc != steps; i_loc++)
-		{
-			switch (qei_state_loc)
-			{
-				case 0: QEI_B_RE;
-					      qei_state_loc = 2;
-								break;
-				case 1: QEI_A_FE;
-					      qei_state_loc = 0;
-								break;
-				case 2: QEI_A_RE;
-					      qei_state_loc = 3;
-								break;
-				case 3: QEI_B_FE;
-					      qei_state_loc = 1;
-								break;
-			}
-		}//qei ccw/reverse end
-	}
-
-	*pnt_qei_state = qei_state_loc;
-
-	result = 0;
-
-	return result;
-}
-
 void SCT_IRQHandler(void)
 {
 	LPC_SCT0->EVFLAG = 0x000000FF;	//clear all event flags
 
 	//update sw_qei_count based on the direction
 	if ((LPC_SCT0->OUTPUT & (1<<sct_out_qei_direction)) == 0)
-	{ //CW direction
-		if (sw_qei_count == sw_qei_max)
-		{
-			sw_qei_count = 0;
-		}
-		else
-		{
-			sw_qei_count++;
-		} //CW direction end
+	{
+	  //CW direction
+	  sw_qei_count++;
 
 		// Enable LED when CW
 		LPC_GPIO_PORT->CLR0 = (1 << LED_PIN);
 	}
 	else
-	{ //CCW direction
-		if (sw_qei_count == 0)
-		{
-			sw_qei_count = sw_qei_max;
-		}
-		else
-		{
-			sw_qei_count--;
-		}//CCW direction end
+	{
+	  //CCW direction
+	  sw_qei_count--;
 
 		// Disable LED when CCW
 		LPC_GPIO_PORT->SET0 = (1 << LED_PIN);
-	}//sw qei count update end
+	}
 
 	return;
 }
