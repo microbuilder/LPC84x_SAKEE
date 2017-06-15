@@ -19,9 +19,11 @@
 #include <stdint.h>
 #include "LPC8xx.h"
 
-void qei_init(void);
-//uint32_t void quadrature_
+void    qei_init        (void);
 
+int16_t qei_abs_step    (void);
+int16_t qei_offset_step (void);
+int16_t qei_reset_step  (void);
 
 #ifdef __cplusplus
  }

@@ -26,8 +26,6 @@
  P0.27 [O] - GPO: SCT isr indicator
  */
 
-volatile int16_t sw_qei_count = 0;
-
 enum sct_in
 {
   sct_in_qei_A = 0,
@@ -75,11 +73,32 @@ enum sct_event
 #define QEI_B_HIGH QEI_B_RE
 #define QEI_B_LOW  QEI_B_FE
 
-#define LED_PIN		(0)
+volatile int16_t _qei_step = 0;
+
+int16_t qei_abs_step    (void)
+{
+  return _qei_step;
+}
+
+int16_t qei_offset_step (void)
+{
+  static int16_t last_value = 0;
+
+  int16_t ret = _qei_step - last_value;
+
+  last_value =  _qei_step;
+
+  return ret;
+}
+
+int16_t qei_reset_step  (void)
+{
+  _qei_step = 0;
+}
 
 void qei_init(void)
 {
-  sw_qei_count = 0; // Init variable
+  _qei_step = 0; // Init variable
 
 	//CLKOUT setup begin
 	//CLKOUT = main/1 @ P0.19
@@ -253,18 +272,12 @@ void SCT_IRQHandler(void)
 	if ((LPC_SCT0->OUTPUT & (1<<sct_out_qei_direction)) == 0)
 	{
 	  //CW direction
-	  sw_qei_count++;
-
-		// Enable LED when CW
-		LPC_GPIO_PORT->CLR0 = (1 << LED_PIN);
+	  _qei_step++;
 	}
 	else
 	{
 	  //CCW direction
-	  sw_qei_count--;
-
-		// Disable LED when CCW
-		LPC_GPIO_PORT->SET0 = (1 << LED_PIN);
+	  _qei_step--;
 	}
 
 	return;

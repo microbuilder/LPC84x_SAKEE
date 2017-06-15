@@ -89,6 +89,31 @@ int main(void)
 	while (1) gfx_tester_run();
 #endif
 
+#if 1
+	// test QEI
+	while(1)
+	{
+	  ssd1306_clear();
+
+	  ssd1306_set_text(8 , 0, 1, "ABS", 2);
+	  ssd1306_set_text(60, 0, 1, "OFFSET", 2);
+
+	  gfx_printdec(8, 20, qei_abs_step(), 2, 1);
+
+	  // only print if offset is not 0 --> first
+	  static int16_t last_offset = 0;
+
+	  int16_t cur_offset = qei_offset_step();
+	  if ( cur_offset ) last_offset = cur_offset;
+
+	  gfx_printdec(60, 20, last_offset, 2, 1);
+
+	  ssd1306_refresh();
+
+	  delay_ms(100);
+	}
+#endif
+
 	ssd1306_set_text(8, 0, 1, "WAITING FOR", 2);
 	ssd1306_set_text(8, 16, 1, "ADC TRIGGER", 2);
 	ssd1306_set_text(8, 36, 1, "RANGE:", 1);
