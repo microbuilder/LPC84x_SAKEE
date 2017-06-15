@@ -331,13 +331,15 @@ void DMA_IRQHandler(void)
 // This interrupt handler determines the sample that triggered the threshold interrupt
 void ADC_THCMP_IRQHandler(void)
 {
+  uint32_t offset_countdown = LPC_DMA->CHANNEL[0].XFERCFG;
+
   // Only check the threshold interrupt status of our ADC channel
   uint32_t intsts = (LPC_ADC->FLAGS & (1 << _channel)) ;
 
   if ( intsts )
   {
     // The sample that caused the interrupt
-    uint16_t offset_countdown = ((LPC_DMA->CHANNEL[0].XFERCFG & 0xFFFF0000) >> 16) - 1;
+    offset_countdown = ((offset_countdown & 0xFFFF0000) >> 16) - 1;
     _adc_dma_trigger_offset = (DMA_BUFFER_SIZE-1) - offset_countdown;
 
     // Disable the interrupt
