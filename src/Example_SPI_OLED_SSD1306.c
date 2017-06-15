@@ -37,23 +37,23 @@
  OLED Display
  LPC    ARD   Description
  -----  ---   -----------
- P0.6	  D13	  OLED SCK
+ P0.6	D13	  OLED SCK
  P1.19	D11	  OLED Data/MOSI
  P1.18	D10	  OLED CS
  P0.16	D8	  OLED Reset
- P0.1	  D7	  OLED Data/Command Select
+ P0.1	D7	  OLED Data/Command Select
 
  SCT QEI and ADC
  LPC    ARD   Description
  -----  ---   -----------
- P0.20  D3    SCT_IN0: QEI0 phA
- P0.21  D2    SCT_IN1: QEI0 phB
- P1.21  D4	  Switch button
+ P1.21  D4	  QEI0 switch/button
+ P0.20  D3    SCT_IN0: QEI0 phA (internal pullup enabled)
+ P0.21  D2    SCT_IN1: QEI0 phB (internal pullup enabled)
 
  DMA ADC
  LPC    ARD   Description
  -----  ---   -----------
- P0.14  A0    Analog Input - ADC2
+ P0.14  A0    Analog Input (ADC2)
 
  LEDS
  LPC    ARD   Description
@@ -117,8 +117,8 @@ int main(void)
 	// test QEI
 	while(1)
 	{
-	  static int16_t last_offset = 0;
-	  static uint32_t btn_count = 0;
+	  static int32_t last_offset = 0;
+	  static int32_t btn_count = 0;
 
 	  ssd1306_clear();
 
@@ -126,15 +126,18 @@ int main(void)
 	  ssd1306_set_text(60, 0, 1, "OFFSET", 2);
 
 	  // ABS
-	  gfx_printdec(8, 20, qei_abs_step(), 2, 1);
+	  int32_t abs = qei_abs_step();
+	  gfx_printdec(8, 20, abs, 2, 1);
 
-	  // Offset only print if offset is not 0 --> first
-	  int16_t cur_offset = qei_offset_step();
-	  if ( cur_offset ) last_offset = cur_offset;
-
+	  // Display offset if non-zero
+	  int32_t cur_offset = qei_offset_step();
+	  if ( cur_offset )
+	  {
+	    last_offset = cur_offset;
+	  }
 	  gfx_printdec(60, 20, last_offset, 2, 1);
 
-	  // Button pressed count
+	  // Select button counter
 	  btn_count += (button_pressed() ? 1 : 0);
 	  ssd1306_set_text(8 , 40, 1, "btn", 2);
 	  gfx_printdec(60, 40, btn_count, 2, 1);
@@ -220,15 +223,15 @@ uint32_t button_pressed(void)
   // must be exponent of 2
   enum { MAX_CHECKS = 2, SAMPLE_TIME = 5 };
 
-  /* Array that maintains bounce status/, which is sampled
-   * 10 ms each. Debounced state is regconized if all the values
-   * of a button has the same value (bit set or clear)
+  /* Array that maintains bounce status, which is sampled
+   * 10 ms each. Debounced state is valid if all values
+   * on a switch maintain the same state (bit set or clear)
    */
   static uint32_t lastReadTime = 0;
   static uint32_t states[MAX_CHECKS] = { 0 };
   static uint32_t index = 0;
 
-  // Last Debounced state, used to detect changed
+  // Last debounce state, used to detect changes
   static uint32_t lastDebounced = 0;
 
   // Too soon, nothing to do
@@ -236,7 +239,7 @@ uint32_t button_pressed(void)
 
   lastReadTime = millis();
 
-  // Take current read and masked with BUTTONs
+  // Take current read and mask with BUTTONs
   // Note: Bitwise inverted since buttons are active (pressed) LOW
   uint32_t debounced = button_read();
 
@@ -251,7 +254,7 @@ uint32_t button_pressed(void)
     debounced &= states[i];
   }
 
-  // result is button changed and current debounced is set
+  // result is button changed and current debounce is set
   // Mean button is pressed (idle previously)
   uint32_t result = (debounced ^ lastDebounced) & debounced;
 

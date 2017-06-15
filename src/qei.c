@@ -73,18 +73,18 @@ enum sct_event
 #define QEI_B_HIGH QEI_B_RE
 #define QEI_B_LOW  QEI_B_FE
 
-volatile int16_t _qei_step = 0;
+volatile int32_t _qei_step = 0;
 
-int16_t qei_abs_step    (void)
+int32_t qei_abs_step    (void)
 {
   return _qei_step;
 }
 
-int16_t qei_offset_step (void)
+int32_t qei_offset_step (void)
 {
-  static int16_t last_value = 0;
+  static int32_t last_value = 0;
 
-  int16_t ret = _qei_step - last_value;
+  int32_t ret = _qei_step - last_value;
 
   last_value =  _qei_step;
 
@@ -128,11 +128,13 @@ void qei_init(void)
 
 	LPC_SWM->PINASSIGN6 = (LPC_SWM->PINASSIGN6 & ~(0xFF<<24)) | ((0*32+20)<<24);	//CTIN_0 @ P0.20 (QEI A)
 	LPC_INMUX_TRIGMUX->SCT0_INMUX0 = 0;													//SCT0_PIN0 = SWM
-	LPC_IOCON->PIO0_20 = (LPC_IOCON->PIO0_20 & ~(3<<3)) | 1<<5 | 0<<3;				//no PU/PD; enable hysteresis
+	//LPC_IOCON->PIO0_20 = (LPC_IOCON->PIO0_20 & ~(3<<3)) | 1<<5 | 0<<3;				//no PU/PD; enable hysteresis
+	LPC_IOCON->PIO0_20 = (LPC_IOCON->PIO0_20 & ~(3<<3)) | 1<<5 | 2<<3;				//PU; enable hysteresis
 
 	LPC_SWM->PINASSIGN7 = (LPC_SWM->PINASSIGN7 & ~(0xFF<< 0)) | ((0*32+21)<< 0);	//CTIN_1 @ P0.21 (QEI B)
 	LPC_INMUX_TRIGMUX->SCT0_INMUX1 = 1;													//SCT0_PIN1 = SWM
-	LPC_IOCON->PIO0_21 = (LPC_IOCON->PIO0_21 & ~(3<<3)) | 1<<5 | 0<<3;				//no PU/PD; enable hysteresis
+	//LPC_IOCON->PIO0_21 = (LPC_IOCON->PIO0_21 & ~(3<<3)) | 1<<5 | 0<<3;				//no PU/PD; enable hysteresis
+	LPC_IOCON->PIO0_21 = (LPC_IOCON->PIO0_21 & ~(3<<3)) | 1<<5 | 2<<3;				//PU; enable hysteresis
 
 	LPC_SWM->PINASSIGN7 = (LPC_SWM->PINASSIGN7 & ~(0xFF<<24)) | ((0*32+22)<<24);	//CTOUT_0 @ P0.22 (counting up indicator)
 	LPC_IOCON->PIO0_22 = (LPC_IOCON->PIO0_22 & ~(3<<3)) | 1<<5 | 0<<3;				//no PU/PD; enable hysteresis

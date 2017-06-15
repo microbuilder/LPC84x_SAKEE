@@ -238,7 +238,7 @@ ssd1306_refresh(void)
     }
 	LPC_GPIO_PORT->SET1 = (1 << (SSD1306_SSELPIN%32));	// Deassert CS
 
-	delay_ms(50);
+	delay_ms(100);
 
 	return 0;
 }

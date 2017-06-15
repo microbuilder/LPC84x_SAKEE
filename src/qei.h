@@ -21,8 +21,8 @@
 
 void    qei_init        (void);
 
-int16_t qei_abs_step    (void);
-int16_t qei_offset_step (void);
+int32_t qei_abs_step    (void);
+int32_t qei_offset_step (void);
 void    qei_reset_step  (void);
 
 #ifdef __cplusplus
