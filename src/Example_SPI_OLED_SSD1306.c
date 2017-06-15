@@ -74,7 +74,7 @@ int main(void)
 	LPC_GPIO_PORT->DIR0 |= (1 << LED_PIN);
 
 	// Initialize the SCT based quadrature decoder
-	quadrature_init();
+	qei_init();
 
 	// Initialize the DMA and systick based ADC sampler
 	adc_dma_init();

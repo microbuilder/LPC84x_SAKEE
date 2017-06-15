@@ -74,7 +74,7 @@ void sw_gate(void)
 	return;
 }
 
-void quadrature_init(void)
+void qei_init(void)
 {
   sw_qei_count = 0; // Init variable
 

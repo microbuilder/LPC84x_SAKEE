@@ -19,7 +19,7 @@
 #include <stdint.h>
 #include "LPC8xx.h"
 
-void quadrature_init(void);
+void qei_init(void);
 //uint32_t void quadrature_
 
 
