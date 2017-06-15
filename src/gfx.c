@@ -288,10 +288,18 @@ static uint8_t gfx_div_ten(uint32_t dec, uint8_t c)
 	return dec % 10;
 }
 
-int gfx_printdec(uint8_t x, uint8_t y, uint32_t dec, uint8_t scale, uint8_t color)
+int gfx_printdec(uint8_t x, uint8_t y, int32_t dec, uint8_t scale, uint8_t color)
 {
 	char c[2] = { 0x00, 0x00 };
 	uint8_t len, i;
+
+	if ( dec < 0 )
+	{
+	  ssd1306_set_text(x, y, 1, "-", scale);
+	  x += 5*scale;
+
+	  dec = -dec;
+	}
 
 	len = gfx_num_digits(dec);
 	for (i=0;i<len;i++)
