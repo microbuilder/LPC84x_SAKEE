@@ -23,6 +23,11 @@ SysTick_Handler(void)
 	g_delay_ms_ticks++;
 }
 
+uint32_t millis(void)
+{
+  return g_delay_ms_ticks;
+}
+
 void
 delay_ms(uint32_t delayms)
 {

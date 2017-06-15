@@ -26,7 +26,10 @@
 #include "adc_dma.h"
 #include "qei.h"
 
-#define LED_PIN		(P0_0)
+#define LED_PIN		  (P0_0)
+#define BUTTON_PIN  P1_21
+
+#define bit(_x)    ( 1 << (_x) )
 
 /*
  Pins used in this application:
@@ -45,7 +48,7 @@
  -----  ---   -----------
  P0.20  D3    SCT_IN0: QEI0 phA
  P0.21  D2    SCT_IN1: QEI0 phB
- P1.21  D4	  Optional: CLKOUT (can be disabled by setting SCT_ADC_DEBUG to 0)
+ P1.21  D4	  Switch button
 
  DMA ADC
  LPC    ARD   Description
@@ -57,6 +60,24 @@
  -----  ---   -----------
  P0.0  	--	  Debug LED (GREEN)
 */
+
+uint32_t button_pressed(void);
+
+void led_on(void)
+{
+  LPC_GPIO_PORT->CLR0 = (1 << LED_PIN);
+}
+
+void led_off(void)
+{
+  LPC_GPIO_PORT->SET0 = (1 << LED_PIN);
+}
+
+static inline uint32_t button_read(void)
+{
+  // button is active LOW
+  return ((~(LPC_GPIO_PORT->PIN[BUTTON_PIN/32])) & bit(BUTTON_PIN%32) );
+}
 
 int main(void)
 {
@@ -70,8 +91,11 @@ int main(void)
 	GPIOInit();
 
 	// Initialize the status LED
-	LPC_GPIO_PORT->SET0 = (1 << LED_PIN);
-	LPC_GPIO_PORT->DIR0 |= (1 << LED_PIN);
+	GPIOSetDir(LED_PIN/32, LED_PIN%32, 1);
+	led_off();
+
+	// Initialize Button
+	GPIOSetDir(BUTTON_PIN/32, BUTTON_PIN%32, 0);
 
 	// Initialize the SCT based quadrature decoder
 	qei_init();
@@ -93,24 +117,31 @@ int main(void)
 	// test QEI
 	while(1)
 	{
+	  static int16_t last_offset = 0;
+	  static uint32_t btn_count = 0;
+
 	  ssd1306_clear();
 
 	  ssd1306_set_text(8 , 0, 1, "ABS", 2);
 	  ssd1306_set_text(60, 0, 1, "OFFSET", 2);
 
+	  // ABS
 	  gfx_printdec(8, 20, qei_abs_step(), 2, 1);
 
-	  // only print if offset is not 0 --> first
-	  static int16_t last_offset = 0;
-
+	  // Offset only print if offset is not 0 --> first
 	  int16_t cur_offset = qei_offset_step();
 	  if ( cur_offset ) last_offset = cur_offset;
 
 	  gfx_printdec(60, 20, last_offset, 2, 1);
 
+	  // Button pressed count
+	  btn_count += (button_pressed() ? 1 : 0);
+	  ssd1306_set_text(8 , 40, 1, "btn", 2);
+	  gfx_printdec(60, 40, btn_count, 2, 1);
+
 	  ssd1306_refresh();
 
-	  delay_ms(100);
+	  delay_ms(1);
 	}
 #endif
 
@@ -124,14 +155,6 @@ int main(void)
 
 	while(1)
 	{
-#if 0
-		LPC_GPIO_PORT->CLR0 = (1 << LED_PIN);
-		delay_ms(1000);
-
-		LPC_GPIO_PORT->SET0 = (1 << LED_PIN);
-		delay_ms(1000);
-#endif
-
 		if ( !adc_dma_busy() )
 		{
 		  // Start sampling, After buffers are full
@@ -179,4 +202,60 @@ int main(void)
 	}
 
 	return 0;
+}
+
+/**
+ * Check if button A,B,C state are pressed, include some software
+ * debouncing.
+ *
+ * Note: Only set bit when Button is state change from
+ * idle -> pressed. Press and hold only report 1 time, release
+ * won't report as well
+ *
+ * @return Bitmask of pressed buttons e.g If BUTTON_A is pressed
+ * bit 31 will be set.
+ */
+uint32_t button_pressed(void)
+{
+  // must be exponent of 2
+  enum { MAX_CHECKS = 2, SAMPLE_TIME = 5 };
+
+  /* Array that maintains bounce status/, which is sampled
+   * 10 ms each. Debounced state is regconized if all the values
+   * of a button has the same value (bit set or clear)
+   */
+  static uint32_t lastReadTime = 0;
+  static uint32_t states[MAX_CHECKS] = { 0 };
+  static uint32_t index = 0;
+
+  // Last Debounced state, used to detect changed
+  static uint32_t lastDebounced = 0;
+
+  // Too soon, nothing to do
+  if (millis() - lastReadTime < SAMPLE_TIME ) return 0;
+
+  lastReadTime = millis();
+
+  // Take current read and masked with BUTTONs
+  // Note: Bitwise inverted since buttons are active (pressed) LOW
+  uint32_t debounced = button_read();
+
+  // Copy current state into array
+  states[ (index & (MAX_CHECKS-1)) ] = debounced;
+  index++;
+
+  // Bitwise And all the state in the array together to get the result
+  // This means pin must stay at least MAX_CHECKS time to be realized as changed
+  for(int i=0; i<MAX_CHECKS; i++)
+  {
+    debounced &= states[i];
+  }
+
+  // result is button changed and current debounced is set
+  // Mean button is pressed (idle previously)
+  uint32_t result = (debounced ^ lastDebounced) & debounced;
+
+  lastDebounced = debounced;
+
+  return result;
 }

@@ -20,5 +20,6 @@
 
 void delay_ms(uint32_t delayms);
 int delay_init(uint32_t interval);
+uint32_t millis(void);
 
 #endif /* DELAY_H_ */
