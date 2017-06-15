@@ -28,7 +28,7 @@
 volatile uint32_t user_gate_pattern, user_gate_counter;
 volatile uint32_t qei_state;
 
-volatile int16_t  sw_qei_count;
+volatile int16_t  sw_qei_count = 0;
 
 enum sct_in			{sct_in_qei_A = 0, sct_in_qei_B};
 enum sct_out		{sct_out_qei_direction = 0};
@@ -55,25 +55,9 @@ enum sct_event	    {sct_ev_qei00_A_re = 0, sct_ev_qei00_B_re,
 #define QEI_B_HIGH QEI_B_RE
 #define QEI_B_LOW  QEI_B_FE
 
-uint32_t init_mcu(void);
-uint32_t init_sct(void);
-uint32_t init_qei(uint32_t state);
 uint32_t qei_rotate(uint32_t * pnt_qei_state, uint32_t direction, uint32_t steps);
 
 #define LED_PIN		(0)
-
-void quadrature_init(void)
-{
-	init_mcu();
-
-
-	QEI_A_LOW;
-	QEI_B_LOW;
-
-	init_sct();
-
-	sw_qei_count = 0;
-}
 
 void sw_gate(void)
 {
@@ -89,8 +73,10 @@ void sw_gate(void)
 	return;
 }
 
-uint32_t init_mcu(void)
+void quadrature_init(void)
 {
+  sw_qei_count = 0; // Init variable
+
 	//CLKOUT setup begin
 	//CLKOUT = main/1 @ P0.19
 	LPC_SYSCON->SYSAHBCLKCTRL0 |= (GPIO0 | GPIO1 | SWM);				//enable access to SWM
@@ -105,13 +91,12 @@ uint32_t init_mcu(void)
 	//CLKOUT setup end
 	LPC_SWM->PINASSIGN11 = (LPC_SWM->PINASSIGN11 & ~(0xFF<<16)) | ((0*32+19)<<16);	//CLKOUT @ P0.19
 
-	return 0;
-}
+	// GPIO state
+	QEI_A_LOW;
+	QEI_B_LOW;
 
-uint32_t init_sct(void)
-{
-	LPC_SYSCON->SYSAHBCLKCTRL0 |= (GPIO0 | GPIO1);				//enable access to GPIOs
-	LPC_SYSCON->SYSAHBCLKCTRL0 |= IOCON;				//enable access to IOCON
+	/*------------- Config SCT -------------*/
+	LPC_SYSCON->SYSAHBCLKCTRL0 |= IOCON;				//enable access to GPIOs
 
 	//SCT setup begin
 	LPC_SYSCON->SYSAHBCLKCTRL0 |= SCT;				//enable SCT clock...
