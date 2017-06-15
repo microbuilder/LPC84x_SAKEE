@@ -197,8 +197,8 @@ int main(void)
             float trig_mv = MV_PER_LSB * trig;
         	gfx_printdec(70, 16, (int32_t)trig_mv, 1, 1);
             ssd1306_set_text(70, 16, 1, "        mV", 1);
-            ssd1306_set_text(70, 35, 1, "200 ms/div", 1);
-            ssd1306_set_text(70, 43, 1, "100 mV/div", 1);
+            ssd1306_set_text(70, 35, 1, "xx  ms/div", 1);
+            ssd1306_set_text(70, 43, 1, "xx  mV/div", 1);
 
             // Refresh the display
             ssd1306_refresh();
@@ -216,12 +216,11 @@ int main(void)
 }
 
 /**
- * Check if button A,B,C state are pressed, include some software
- * debouncing.
+ * Check if a button has been pressed, including basic debouncing.
  *
- * Note: Only set bit when Button is state change from
- * idle -> pressed. Press and hold only report 1 time, release
- * won't report as well
+ * Note: Press and hold will be reported as a single click, and
+ *       release isn't reported in the code below. Only a single
+ *       press event will register as a 1 at the appropriate bit.
  *
  * @return Bitmask of pressed buttons e.g If BUTTON_A is pressed
  * bit 31 will be set.
@@ -232,7 +231,7 @@ uint32_t button_pressed(void)
   enum { MAX_CHECKS = 2, SAMPLE_TIME = 5 };
 
   /* Array that maintains bounce status, which is sampled
-   * 10 ms each. Debounced state is valid if all values
+   * at 10 ms/lsb. Debounced state is valid if all values
    * on a switch maintain the same state (bit set or clear)
    */
   static uint32_t lastReadTime = 0;
@@ -255,15 +254,14 @@ uint32_t button_pressed(void)
   states[ (index & (MAX_CHECKS-1)) ] = debounced;
   index++;
 
-  // Bitwise And all the state in the array together to get the result
-  // This means pin must stay at least MAX_CHECKS time to be realized as changed
+  // Bitwise 'and' all the states in the array together to get the result
+  // Pin must stay asserted at least MAX_CHECKS time to be recognized as valid
   for(int i=0; i<MAX_CHECKS; i++)
   {
     debounced &= states[i];
   }
 
-  // result is button changed and current debounce is set
-  // Mean button is pressed (idle previously)
+  // 'result' = button changed and passes debounce checks, 0 = failure or not-asserted
   uint32_t result = (debounced ^ lastDebounced) & debounced;
 
   lastDebounced = debounced;
