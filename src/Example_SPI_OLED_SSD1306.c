@@ -58,8 +58,6 @@
  P0.0  	--	  Debug LED (GREEN)
 */
 
-extern uint16_t *adc_buffer;	// adc_dma.c
-
 int main(void)
 {
 	SystemCoreClockUpdate();
@@ -125,27 +123,27 @@ int main(void)
 		  }
 		  else
 		  {
-			gfx_graticule_cfg_t grcfg =
-			{
-			  .w = 64,			// 64 pixels wide
-			  .h = 32,			// 32 pixels high
-			  .lines = GFX_GRATICULE_LINES_HOR | GFX_GRATICULE_LINES_VER,
-			  .line_spacing = 2,	// Divider lines are 1 dot every 2 pixels
-			  .block_spacing = 8	// Each block is 8x8 pixels
-			};
+        gfx_graticule_cfg_t grcfg =
+        {
+            .w = 64,			// 64 pixels wide
+            .h = 32,			// 32 pixels high
+            .lines = GFX_GRATICULE_LINES_HOR | GFX_GRATICULE_LINES_VER,
+            .line_spacing = 2,	// Divider lines are 1 dot every 2 pixels
+            .block_spacing = 8	// Each block is 8x8 pixels
+        };
 
-			ssd1306_clear();
+        ssd1306_clear();
 
-			// Render the title bars
-			ssd1306_set_text(0, 0, 1, "NXP SAKEE", 1);
-			ssd1306_set_text(127-48, 0, 1, "WAVEFORM", 1);	// 48 pixels wide
+        // Render the title bars
+        ssd1306_set_text(0, 0, 1, "NXP SAKEE", 1);
+        ssd1306_set_text(127 - 48, 0, 1, "WAVEFORM", 1);	// 48 pixels wide
 
-			// Render the graticule and waveform
-			gfx_graticule(0, 16, &grcfg, 1);
-			gfx_waveform_64_32(0, 16, 1, adc_dma_get_buffer(), sample, 4);
+        // Render the graticule and waveform
+        gfx_graticule(0, 16, &grcfg, 1);
+        gfx_waveform_64_32(0, 16, 1, adc_dma_get_buffer(), (uint16_t) sample, 4);
 
-			// Refresh the display
-		    ssd1306_refresh();
+        // Refresh the display
+        ssd1306_refresh();
 		  }
 		}
 

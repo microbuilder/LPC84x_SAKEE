@@ -337,7 +337,7 @@ void ADC_THCMP_IRQHandler(void)
   if ( intsts )
   {
     // The sample that caused the interrupt
-    uint16_t offset_countdown = ((LPC_DMA->CHANNEL[0].XFERCFG & 0x3FF0000) >> 16) - 1;
+    uint16_t offset_countdown = ((LPC_DMA->CHANNEL[0].XFERCFG & 0xFFFF0000) >> 16) - 1;
     _adc_dma_trigger_offset = (DMA_BUFFER_SIZE-1) - offset_countdown;
 
     // Disable the interrupt
