@@ -206,8 +206,6 @@ void adc_dma_start(void)
 
   // Enable sequence A interrupt to trigger DMA transfer
   LPC_ADC->INTEN = (1 << SEQA_INTEN);
-  //NVIC_DisableIRQ(ADC_THCMP_IRQn);
-
   cfg_dma_xfer(2*DMA_BUFFER_SIZE);
 
   // Start sampling using hardware timer
@@ -238,7 +236,7 @@ void adc_dma_start_with_threshold(uint16_t low, uint16_t high, uint8_t mode)
 
   // blocking wait for threshold event
   // TODO add timeout
-  while ( ! (LPC_ADC->FLAGS & (1 << _channel)) )
+  while ( _adc_dma_trigger_offset < 0 )
   {
     cfg_dma_xfer(DMA_BUFFER_SIZE);
 
@@ -250,10 +248,8 @@ void adc_dma_start_with_threshold(uint16_t low, uint16_t high, uint8_t mode)
   }
 
   // Get another 1K sample if the trigger occurs
-  if (LPC_ADC->FLAGS & (1 << _channel))
+  if ( _adc_dma_trigger_offset >= 0 )
   {
-    LPC_ADC->FLAGS |= (1 << _channel); // clear THCMP interrupt
-
     // Continue to sample another 1K in the second buffer
     LPC_ADC->INTEN = (1 << SEQA_INTEN);
 
@@ -341,8 +337,9 @@ void ADC_THCMP_IRQHandler(void)
   if ( intsts )
   {
     // The sample that caused the interrupt
-	uint16_t offset_countdown = ((LPC_DMA->CHANNEL[0].XFERCFG & 0x3FF0000) >> 16) - 1;
+    uint16_t offset_countdown = ((LPC_DMA->CHANNEL[0].XFERCFG & 0x3FF0000) >> 16) - 1;
     _adc_dma_trigger_offset = (DMA_BUFFER_SIZE-1) - offset_countdown;
+
     // Disable the interrupt
     NVIC_DisableIRQ(ADC_THCMP_IRQn);
     // Mark 2nd Descriptor as valid

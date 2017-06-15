@@ -34,11 +34,11 @@
  OLED Display
  LPC    ARD   Description
  -----  ---   -----------
- P0.6	D13	  OLED SCK
+ P0.6	  D13	  OLED SCK
  P1.19	D11	  OLED Data/MOSI
  P1.18	D10	  OLED CS
  P0.16	D8	  OLED Reset
- P0.1	D7	  OLED Data/Command Select
+ P0.1	  D7	  OLED Data/Command Select
 
  SCT QEI and ADC
  LPC    ARD   Description
@@ -86,8 +86,10 @@ int main(void)
 	ssd1306_init();
 	ssd1306_refresh();
 
+#if 0
 	// GFX Tester
-	//gfx_tester_run();
+	while (1) gfx_tester_run();
+#endif
 
 	ssd1306_set_text(8, 0, 1, "WAITING FOR", 2);
 	ssd1306_set_text(8, 16, 1, "ADC TRIGGER", 2);
@@ -113,7 +115,7 @@ int main(void)
 		  // sampling will stop --> adc_dma_busy() return false
 //		  adc_dma_start();
 
-		  // Start with threshold (low, high, intmode)
+		  // Start with threshold (low, high, mode)
 		  // interrupt mode: 0 = disabled, 1 = outside threshold, 2 = crossing threshold
 		  adc_dma_start_with_threshold(0x40, 0xCF, 2);
 		  //adc_dma_start_with_threshold(0x3FF, 0xFFF, 2);
