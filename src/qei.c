@@ -91,7 +91,7 @@ int16_t qei_offset_step (void)
   return ret;
 }
 
-int16_t qei_reset_step  (void)
+void qei_reset_step  (void)
 {
   _qei_step = 0;
 }
@@ -260,8 +260,6 @@ void qei_init(void)
 	                 (1<<1);
 
 	//SCT setup end
-
-	return 0;
 }
 
 void SCT_IRQHandler(void)

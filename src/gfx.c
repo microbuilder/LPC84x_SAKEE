@@ -207,7 +207,7 @@ int gfx_printhex8(uint8_t x, uint8_t y, uint8_t hex, uint8_t scale, uint8_t colo
 	c = gfx_4bhex_to_char((hex & 0xF0)>>4);
     ssd1306_set_text(x, y, 1, (char *)&c, scale);
 	c = gfx_4bhex_to_char(hex & 0xF);
-    ssd1306_set_text(x+(5*scale), y, 1, (char *)&c, scale);
+    ssd1306_set_text(x+(5*scale), y, color, (char *)&c, scale);
 
 	return 0;
 }
@@ -305,7 +305,7 @@ int gfx_printdec(uint8_t x, uint8_t y, int32_t dec, uint8_t scale, uint8_t color
 	for (i=0;i<len;i++)
 	{
 		c[0] = gfx_dec1_to_char(gfx_div_ten(dec, len-i-1));
-	    ssd1306_set_text(x+(5*scale*i), y, 1, c, scale);
+	    ssd1306_set_text(x+(5*scale*i), y, color, c, scale);
 	}
 
 	return 0;
