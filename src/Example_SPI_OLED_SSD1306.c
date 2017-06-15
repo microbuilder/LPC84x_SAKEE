@@ -27,7 +27,8 @@
 #include "qei.h"
 
 #define LED_PIN		  (P0_0)
-#define BUTTON_PIN  P1_21
+#define BUTTON_PIN    (P1_21)
+#define MV_PER_LSB    (3300.0F / 0xFFF)
 
 #define bit(_x)    ( 1 << (_x) )
 
@@ -113,7 +114,7 @@ int main(void)
 	while (1) gfx_tester_run();
 #endif
 
-#if 1
+#if 0
 	// test QEI
 	while(1)
 	{
@@ -148,60 +149,67 @@ int main(void)
 	}
 #endif
 
-	ssd1306_set_text(8, 0, 1, "WAITING FOR", 2);
-	ssd1306_set_text(8, 16, 1, "ADC TRIGGER", 2);
-	ssd1306_set_text(8, 36, 1, "RANGE:", 1);
-	gfx_printdec(8, 48, 0x40, 2, 1);
-	ssd1306_set_text(30, 54, 1, "..", 1);
-	gfx_printdec(44, 48, 0xCF, 2, 1);
-	ssd1306_refresh();
-
 	while(1)
 	{
+		ssd1306_clear();
+		ssd1306_set_text(8, 0, 1, "WAITING FOR", 2);
+		ssd1306_set_text(8, 16, 1, "ADC TRIGGER:", 2);
+		ssd1306_set_text(8, 32, 1, "2.95-3.05V", 2);
+		ssd1306_set_text(8, 48, 1, "(3660..3785 LSB)", 1);
+		ssd1306_refresh();
+
 		if ( !adc_dma_busy() )
 		{
-		  // Start sampling, After buffers are full
-		  // sampling will stop --> adc_dma_busy() return false
-//		  adc_dma_start();
-
-		  // Start with threshold (low, high, mode)
+		  // Start sampling with threshold detection (low, high, mode)
 		  // interrupt mode: 0 = disabled, 1 = outside threshold, 2 = crossing threshold
-		  adc_dma_start_with_threshold(0x40, 0xCF, 2);
-		  //adc_dma_start_with_threshold(0x3FF, 0xFFF, 2);
+		  // 2.95V..3.05V @ 3.3VREF = 3660..3785
+		  adc_dma_start_with_threshold(3660, 3785, 2);
 		  int16_t sample = adc_dma_get_threshold_sample();
 		  if (sample < 0)
 		  {
+			  // ToDo: Error message
 		  }
 		  else
 		  {
-        gfx_graticule_cfg_t grcfg =
-        {
-            .w = 64,			// 64 pixels wide
-            .h = 32,			// 32 pixels high
-            .lines = GFX_GRATICULE_LINES_HOR | GFX_GRATICULE_LINES_VER,
-            .line_spacing = 2,	// Divider lines are 1 dot every 2 pixels
-            .block_spacing = 8	// Each block is 8x8 pixels
-        };
+            gfx_graticule_cfg_t grcfg =
+            {
+              .w = 64,			// 64 pixels wide
+              .h = 32,			// 32 pixels high
+              .lines = GFX_GRATICULE_LINES_HOR | GFX_GRATICULE_LINES_VER,
+              .line_spacing = 2,	// Divider lines are 1 dot every 2 pixels
+              .block_spacing = 8	// Each block is 8x8 pixels
+            };
 
-        ssd1306_clear();
+            ssd1306_clear();
 
-        // Render the title bars
-        ssd1306_set_text(0, 0, 1, "NXP SAKEE", 1);
-        ssd1306_set_text(127 - 48, 0, 1, "WAVEFORM", 1);	// 48 pixels wide
+            // Render the title bars
+            ssd1306_set_text(0, 0, 1, "NXP SAKEE", 1);
+            ssd1306_set_text(127 - 48, 0, 1, "WAVEFORM", 1);	// 48 pixels wide
 
-        // Render the graticule and waveform
-        gfx_graticule(0, 16, &grcfg, 1);
-        // Make sure we have at least 32 samples before the trigger, or start at 0 if less
-        uint16_t start = sample >= 32 ? sample - 32 : 0;
-        gfx_waveform_64_32(0, 16, 1, adc_dma_get_buffer(), start, 1024, 4);
+            // Render the graticule and waveform
+            gfx_graticule(0, 16, &grcfg, 1);
+            // Make sure we have at least 32 samples before the trigger, or start at 0 if less
+            uint16_t start = sample >= 32 ? sample - 32 : 0;
+            gfx_waveform_64_32(0, 16, 1, adc_dma_get_buffer(), start, 1024, 4);
 
-        // Refresh the display
-        ssd1306_refresh();
+            // Labels
+            uint16_t trig = adc_dma_get_buffer()[sample]>>4;
+            float trig_mv = MV_PER_LSB * trig;
+        	gfx_printdec(70, 16, (int32_t)trig_mv, 1, 1);
+            ssd1306_set_text(70, 16, 1, "        mV", 1);
+            ssd1306_set_text(70, 35, 1, "200 ms/div", 1);
+            ssd1306_set_text(70, 43, 1, "100 mV/div", 1);
+
+            // Refresh the display
+            ssd1306_refresh();
 		  }
 		}
 
-		// Stop sampling
-		// adc_dma_stop();
+		// Wait for a button press to try again
+		while (!button_pressed())
+		{
+			delay_ms(1);
+		}
 	}
 
 	return 0;
