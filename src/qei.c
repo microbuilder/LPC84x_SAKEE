@@ -8,9 +8,10 @@
 ===============================================================================
 */
 
-#include "quadrature.h"
 #include "sct.h"
 #include "syscon.h"
+
+#include "qei.h"
 #include "sct_generic_addon.h"
 
 /*

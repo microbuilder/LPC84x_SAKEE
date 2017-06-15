@@ -24,7 +24,7 @@
 #include "testers/gfx_tester.h"
 
 #include "adc_dma.h"
-#include "quadrature.h"
+#include "qei.h"
 
 #define LED_PIN		(P0_0)
 

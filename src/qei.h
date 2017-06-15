@@ -8,8 +8,8 @@
 ===============================================================================
 */
 
-#ifndef QUADRATURE_H_
-#define QUADRATURE_H_
+#ifndef QEI_H_
+#define QEI_H_
 
 
 #ifdef __cplusplus
@@ -27,4 +27,4 @@ void quadrature_init(void);
  }
 #endif
 
-#endif /* QUADRATURE_H_ */
+#endif /* QEI_H_ */
