@@ -12,7 +12,7 @@
 #include "gfx.h"
 #include "ssd1306.h"
 
-int gfx_waveform_64_32(uint8_t x, uint8_t y, uint8_t color, const uint16_t *wform, uint16_t offset, uint8_t rshift)
+int gfx_waveform_64_32(uint8_t x, uint8_t y, uint8_t color, const uint16_t *wform, uint16_t offset, uint16_t bufsize, uint8_t rshift)
 {
 	uint16_t i,o;
 
@@ -26,7 +26,7 @@ int gfx_waveform_64_32(uint8_t x, uint8_t y, uint8_t color, const uint16_t *wfor
 	for (i=0; i<64; i++)
 	{
 		// Calculate the offset in the lookup table if requested
-		o = offset ? (i + offset) % 64 : i;
+		o = offset ? (i + offset) % bufsize : i;
 		// (12-bit data/32 pixels = 128 lsbs per pixel)
 		ssd1306_set_pixel(x+i,y+32-(wform[o]>>rshift)/128 , color);
 	}

@@ -140,7 +140,7 @@ int main(void)
 
         // Render the graticule and waveform
         gfx_graticule(0, 16, &grcfg, 1);
-        gfx_waveform_64_32(0, 16, 1, adc_dma_get_buffer(), (uint16_t) sample, 4);
+        gfx_waveform_64_32(0, 16, 1, adc_dma_get_buffer(), (uint16_t) sample, 1024, 4);
 
         // Refresh the display
         ssd1306_refresh();
