@@ -74,6 +74,7 @@ enum sct_event
 #define QEI_B_LOW  QEI_B_FE
 
 volatile int32_t _qei_step = 0;
+volatile uint32_t _qei_isr_counter = 0;
 
 int32_t qei_abs_step    (void)
 {
@@ -266,6 +267,8 @@ void qei_init(void)
 
 void SCT_IRQHandler(void)
 {
+	_qei_isr_counter++;
+
 	LPC_SCT0->EVFLAG = 0x000000FF;	//clear all event flags
 
 	//update sw_qei_count based on the direction
