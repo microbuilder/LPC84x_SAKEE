@@ -26,19 +26,38 @@
  P0.27 [O] - GPO: SCT isr indicator
  */
 
-volatile uint32_t user_gate_pattern, user_gate_counter;
-volatile uint32_t qei_state;
+volatile int16_t sw_qei_count = 0;
 
-volatile int16_t  sw_qei_count = 0;
+enum sct_in
+{
+  sct_in_qei_A = 0,
+  sct_in_qei_B
+};
 
-enum sct_in			{sct_in_qei_A = 0, sct_in_qei_B};
-enum sct_out		{sct_out_qei_direction = 0};
-enum sct_mc			{sct_m_dummy = 0};
-enum sct_state	    {sct_st_qei00 = 0, sct_st_qei01, sct_st_qei10, sct_st_qei11};
-enum sct_event	    {sct_ev_qei00_A_re = 0, sct_ev_qei00_B_re,
-					 sct_ev_qei01_A_fe, sct_ev_qei01_B_re,
-					 sct_ev_qei10_A_re, sct_ev_qei10_B_fe,
-					 sct_ev_qei11_A_fe, sct_ev_qei11_B_fe};
+enum sct_out
+{
+  sct_out_qei_direction = 0
+};
+
+enum sct_state
+{
+  sct_st_qei00 = 0,
+  sct_st_qei01,
+  sct_st_qei10,
+  sct_st_qei11
+};
+
+enum sct_event
+{
+  sct_ev_qei00_A_re = 0,
+  sct_ev_qei00_B_re,
+  sct_ev_qei01_A_fe,
+  sct_ev_qei01_B_re,
+  sct_ev_qei10_A_re,
+  sct_ev_qei10_B_fe,
+  sct_ev_qei11_A_fe,
+  sct_ev_qei11_B_fe
+};
 
 #define QEI_CW  0
 #define QEI_CCW 1
@@ -56,23 +75,7 @@ enum sct_event	    {sct_ev_qei00_A_re = 0, sct_ev_qei00_B_re,
 #define QEI_B_HIGH QEI_B_RE
 #define QEI_B_LOW  QEI_B_FE
 
-uint32_t qei_rotate(uint32_t * pnt_qei_state, uint32_t direction, uint32_t steps);
-
 #define LED_PIN		(0)
-
-void sw_gate(void)
-{
-	user_gate_counter = 0;
-
-	user_gate_pattern = 0xDEADC0DE;
-
-	while(user_gate_pattern != 0x13)
-	{
-		user_gate_counter++;
-	}
-
-	return;
-}
 
 void qei_init(void)
 {
