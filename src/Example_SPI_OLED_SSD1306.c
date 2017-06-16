@@ -113,7 +113,7 @@ int main(void)
 	while (1) gfx_tester_run();
 #endif
 
-#if 1
+#if 0
 	// test QEI
 	while(1)
 	{
