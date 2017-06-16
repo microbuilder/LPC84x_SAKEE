@@ -23,14 +23,13 @@
 #include "gfx.h"
 #include "testers/gfx_tester.h"
 
+#include "config.h"
 #include "adc_dma.h"
 #include "qei.h"
 
 #define LED_PIN		  (P0_0)
 #define BUTTON_PIN    (P1_21)
 #define MV_PER_LSB    (3300.0F / 0xFFF)
-
-#define bit(_x)    ( 1 << (_x) )
 
 /*
  Pins used in this application:
@@ -114,7 +113,7 @@ int main(void)
 	while (1) gfx_tester_run();
 #endif
 
-#if 0
+#if 1
 	// test QEI
 	while(1)
 	{
@@ -128,7 +127,7 @@ int main(void)
 
 	  // ABS
 	  int32_t abs = qei_abs_step();
-	  gfx_printdec(8, 20, abs, 2, 1);
+	  gfx_printdec(8, 16, abs, 2, 1);
 
 	  // Display offset if non-zero
 	  int32_t cur_offset = qei_offset_step();
@@ -136,12 +135,24 @@ int main(void)
 	  {
 	    last_offset = cur_offset;
 	  }
-	  gfx_printdec(60, 20, last_offset, 2, 1);
+	  gfx_printdec(60, 16, last_offset, 2, 1);
 
+#if 0
 	  // Select button counter
 	  btn_count += (button_pressed() ? 1 : 0);
 	  ssd1306_set_text(8 , 40, 1, "btn", 2);
 	  gfx_printdec(60, 40, btn_count, 2, 1);
+#else
+
+	  ssd1306_set_text(8 , 32, 1, "PA", 2);
+	  ssd1306_set_text(60, 32, 1, "PB", 2);
+
+	  uint8_t a_value = (qei_read_pin() & bit(0)) ? 1 : 0;
+	  uint8_t b_value = (qei_read_pin() & bit(1)) ? 1 : 0;
+	  gfx_printdec(8 , 48, a_value, 2, 1);
+	  gfx_printdec(60, 48, b_value, 2, 1);
+
+#endif
 
 	  ssd1306_refresh();
 
