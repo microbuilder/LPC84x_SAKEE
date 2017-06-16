@@ -44,9 +44,13 @@
 #include "swm.h"
 
 // PIN config
+#define LED_PIN		  (P0_0)
 
+#define BUTTON_PIN  (P1_21)
 #define QEI_A_PIN   P0_20
 #define QEI_B_PIN   P0_21
+
+#define ADC_CHANNEL 2 // Pin P0.14 (A0)
 
 
 // Common functions

@@ -27,8 +27,7 @@
 #include "adc_dma.h"
 #include "qei.h"
 
-#define LED_PIN		  (P0_0)
-#define BUTTON_PIN    (P1_21)
+
 #define MV_PER_LSB    (3300.0F / 0xFFF)
 
 /*
@@ -37,11 +36,11 @@
  OLED Display
  LPC    ARD   Description
  -----  ---   -----------
- P0.6	D13	  OLED SCK
+ P0.6	  D13	  OLED SCK
  P1.19	D11	  OLED Data/MOSI
  P1.18	D10	  OLED CS
  P0.16	D8	  OLED Reset
- P0.1	D7	  OLED Data/Command Select
+ P0.1	  D7	  OLED Data/Command Select
 
  SCT QEI and ADC
  LPC    ARD   Description
