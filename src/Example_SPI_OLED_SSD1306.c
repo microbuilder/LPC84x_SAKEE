@@ -112,7 +112,7 @@ int main(void)
 	while (1) gfx_tester_run();
 #endif
 
-#if 1
+#if 0
 	// test QEI
 	while(1)
 	{
@@ -136,13 +136,13 @@ int main(void)
 	  }
 	  gfx_printdec(60, 16, last_offset, 2, 1);
 
-#if 0
+#if 1
 	  // Select button counter
 	  btn_count += (button_pressed() ? 1 : 0);
 	  ssd1306_set_text(8 , 40, 1, "btn", 2);
 	  gfx_printdec(60, 40, btn_count, 2, 1);
 #else
-
+	  // A/B pin states
 	  ssd1306_set_text(8 , 32, 1, "PA", 2);
 	  ssd1306_set_text(60, 32, 1, "PB", 2);
 
