@@ -28,6 +28,8 @@ uint16_t adc_buffer[2 * DMA_BUFFER_SIZE];
 // Used to track the sample that caused the threshold interrupt to fire
 volatile int16_t _adc_dma_trigger_offset;
 
+uint32_t _adc_rate_us;
+
 // Instantiate the channel descriptor table, which must be 512-byte aligned (see lpc8xx_dma.h)
 ALIGN(512) DMA_CHDESC_T Chan_Desc_Table[NUM_DMA_CHANNELS];
 
@@ -150,8 +152,16 @@ void adc_dma_set_rate(uint32_t period_us)
 {
   LPC_MRT->Channel[0].INTVAL = (system_ahb_clk / 1000000) * period_us;
 
+  // Store value in us for later reference
+  _adc_rate_us = period_us;
+
   // Disable sampling timer
   disable_sample_timer();
+}
+
+uint32_t adc_dma_get_rate(void)
+{
+	return _adc_rate_us;
 }
 
 void MRT_IRQHandler(void)

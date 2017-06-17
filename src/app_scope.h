@@ -1,19 +1,17 @@
 /*
 ===============================================================================
- Name        : adc.h
+ Name        : app_scope.h
  Author      : $(author)
  Version     :
  Copyright   : $(copyright)
  Description :
 ===============================================================================
-*/
+ */
+#ifndef APP_SCOPE_H_
+#define APP_SCOPE_H_
 
-#include <stdio.h>
+void app_scope_init(void);
+void app_scope_run(void);
 
-#ifndef ADC_POLL_H_
-#define ADC_POLL_H_
 
-int      adc_poll_init(void);
-uint16_t adc_poll_read(uint8_t adc_ch);
-
-#endif /* ADC_POLL_H_ */
+#endif /* APP_SCOPE_H_ */

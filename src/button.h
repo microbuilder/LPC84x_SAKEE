@@ -1,6 +1,6 @@
 /*
 ===============================================================================
- Name        : adc.h
+ Name        : button.h
  Author      : $(author)
  Version     :
  Copyright   : $(copyright)
@@ -8,12 +8,10 @@
 ===============================================================================
 */
 
-#include <stdio.h>
+#ifndef BUTTON_H_
+#define BUTTON_H_
 
-#ifndef ADC_POLL_H_
-#define ADC_POLL_H_
+uint32_t button_pressed(void);
+void     button_init(void);
 
-int      adc_poll_init(void);
-uint16_t adc_poll_read(uint8_t adc_ch);
-
-#endif /* ADC_POLL_H_ */
+#endif /* BUTTON_H_ */

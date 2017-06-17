@@ -43,15 +43,16 @@
 
 #include "swm.h"
 
+#define MV_PER_LSB    (3300.0F / 0xFFF)
+
 // PIN config
-#define LED_PIN		  (P0_0)
+#define LED_PIN     (P0_0)
 
-#define BUTTON_PIN  (P1_21)
-#define QEI_A_PIN   P0_20
-#define QEI_B_PIN   P0_21
+#define BUTTON_PIN  (P0_19)
+#define QEI_A_PIN   (P0_20)
+#define QEI_B_PIN   (P0_21)
 
-#define ADC_CHANNEL 2 // Pin P0.14 (A0)
-
+#define ADC_CHANNEL (2) // Pin P0.14 (A0)
 
 // Common functions
 #define bit(_n)               ( 1 << (_n) )

@@ -19,6 +19,7 @@
 
 void adc_dma_init(void);
 void adc_dma_set_rate(uint32_t period_us);
+uint32_t adc_dma_get_rate(void);
 bool adc_dma_busy(void);
 
 void adc_dma_start(void);

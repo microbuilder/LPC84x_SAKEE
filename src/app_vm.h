@@ -1,19 +1,17 @@
 /*
 ===============================================================================
- Name        : adc.h
+ Name        : app_vm.h
  Author      : $(author)
  Version     :
  Copyright   : $(copyright)
  Description :
 ===============================================================================
-*/
+ */
 
-#include <stdio.h>
+#ifndef APP_VM_H_
+#define APP_VM_H_
 
-#ifndef ADC_POLL_H_
-#define ADC_POLL_H_
+void app_vm_init(void);
+void app_vm_refresh(void);
 
-int      adc_poll_init(void);
-uint16_t adc_poll_read(uint8_t adc_ch);
-
-#endif /* ADC_POLL_H_ */
+#endif /* APP_VM_H_ */

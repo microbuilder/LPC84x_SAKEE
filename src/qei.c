@@ -4,7 +4,7 @@
  Author      : $(author)
  Version     :
  Copyright   : $(copyright)
- Description : SCT based quadrature decoder
+ Description : GPIO interrupt based quadrature decoder
 ===============================================================================
 */
 
