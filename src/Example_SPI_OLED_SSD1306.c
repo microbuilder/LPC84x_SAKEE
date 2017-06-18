@@ -28,6 +28,7 @@
 #include "adc_dma.h"
 #include "qei.h"
 
+#include "app_menu.h"
 #include "app_vm.h"
 #include "app_scope.h"
 
@@ -96,76 +97,33 @@ int main(void)
 	ssd1306_init();
 	ssd1306_refresh();
 
-#if 0
-	// GFX Tester
-	while (1) gfx_tester_run();
-#endif
-
-#if 0
-	// test QEI
-	while(1)
+	// Display the main menu
+	app_menu_init();
+	while (1)
 	{
-	  static int32_t last_offset = 0;
-	  static int32_t btn_count = 0;
-
-	  ssd1306_clear();
-
-	  ssd1306_set_text(8 , 0, 1, "ABS", 2);
-	  ssd1306_set_text(60, 0, 1, "OFFSET", 2);
-
-	  // ABS
-	  int32_t abs = qei_abs_step();
-	  gfx_printdec(8, 16, abs, 2, 1);
-
-	  // Display offset if non-zero
-	  int32_t cur_offset = qei_offset_step();
-	  if ( cur_offset )
-	  {
-	    last_offset = cur_offset;
-	  }
-	  gfx_printdec(60, 16, last_offset, 2, 1);
-
-#if 1
-	  // Select button counter
-	  btn_count += (button_pressed() ? 1 : 0);
-	  ssd1306_set_text(8 , 40, 1, "btn", 2);
-	  gfx_printdec(60, 40, btn_count, 2, 1);
-#else
-	  // A/B pin states
-	  ssd1306_set_text(8 , 32, 1, "PA", 2);
-	  ssd1306_set_text(60, 32, 1, "PB", 2);
-
-	  uint8_t a_value = (qei_read_pin() & bit(0)) ? 1 : 0;
-	  uint8_t b_value = (qei_read_pin() & bit(1)) ? 1 : 0;
-	  gfx_printdec(8 , 48, a_value, 2, 1);
-	  gfx_printdec(60, 48, b_value, 2, 1);
-
-#endif
-
-	  ssd1306_refresh();
-
-	  delay_ms(1);
+		app_menu_option_t option = app_menu_wait();
+		switch (option)
+		{
+		case APP_MENU_OPTION_ABOUT:
+			break;
+		case APP_MENU_OPTION_VOLTMETER:
+			// Init voltmeter
+			app_vm_init();
+			while(1)
+			{
+				app_vm_refresh();
+			}
+			break;
+		case APP_MENU_OPTION_SCOPE:
+			// Init scope at 100kHz
+			app_scope_init(APP_SCOPE_RATE_100_KHZ);
+			while(1)
+			{
+				app_scope_run();
+			}
+			break;
+		}
 	}
-#endif
-
-// Voltmeter App
-#if 0
-	app_vm_init();
-	while(1)
-	{
-		app_vm_refresh();
-	}
-#endif
-
-// Scope App
-#if 1
-	// Init scope at 100kHz
-	app_scope_init(APP_SCOPE_RATE_100_KHZ);
-	while(1)
-	{
-		app_scope_run();
-	}
-#endif
 
 	return 0;
 }

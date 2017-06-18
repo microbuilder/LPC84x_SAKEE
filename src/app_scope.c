@@ -84,6 +84,8 @@ void app_scope_render_waveform(int16_t sample, int32_t offset_us)
 	ssd1306_set_text(70, 43, 1, "    mV/div", 1);
 	gfx_printdec(70, 43, (int32_t)(3300/4), 1, 1);
 
+	ssd1306_set_text(3, 55, 1, "CLICK TO RESET TRIGGER", 1);
+
 	// Refresh the display
 	ssd1306_refresh();
 }
@@ -101,7 +103,7 @@ void app_scope_arm_trigger(void)
 
     // Render the bottom button options
 	ssd1306_fill_rect(0, 55, 128, 8, 1);
-    ssd1306_set_text(96, 56, 0, "STOP", 1);
+    //ssd1306_set_text(96, 56, 0, "STOP", 1);
 
 	ssd1306_set_text(6, 16, 1,  "WAITING FOR", 2);
 	ssd1306_set_text(6, 32, 1, "ADC TRIGGER", 2);
@@ -158,7 +160,7 @@ void app_scope_arm_trigger(void)
 
 void app_scope_render_threshold(uint16_t low, uint16_t high)
 {
-	ssd1306_fill_rect(0, 24, 128, 32, 0);
+	ssd1306_fill_rect(0, 24, 128, 31, 0);
     float lower_v = MV_PER_LSB * (float)low;
     float upper_v = MV_PER_LSB * (float)high;
     ssd1306_set_text(0, 28, 1,  "TRIG L:", 1);
@@ -235,17 +237,20 @@ void app_scope_run(void)
     ssd1306_set_text(127-48, 0, 1, "WAVEFORM", 1);	// 48 pixels wide
 
     // Render the bottom button options
-	ssd1306_fill_rect(0, 55, 128, 8, 1);
-    ssd1306_set_text(8, 56, 0, "HOME", 1);
+	//ssd1306_fill_rect(0, 55, 128, 8, 1);
+    //ssd1306_set_text(8, 56, 0, "HOME", 1);
     //ssd1306_set_text(36, 56, 0, "TIME", 1);
     //ssd1306_set_text(64, 56, 0, "TRIG", 1);
-    ssd1306_set_text(96, 56, 0, "RUN", 1);
+    //ssd1306_set_text(96, 56, 0, "RUN", 1);
 
     // Display the current sample rate
     app_scope_render_rate(_app_scope_rate);
 
     // Display the current lower/upper thresholds
     app_scope_render_threshold(_app_scope_thresh_l, _app_scope_thresh_h);
+
+    // Help message
+	ssd1306_set_text(0, 55, 1, "ROTATE TO ADJUST TRIG L/H", 1);
 
     ssd1306_refresh();
 

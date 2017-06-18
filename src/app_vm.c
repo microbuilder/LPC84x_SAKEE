@@ -29,12 +29,12 @@ void app_vm_init(void)
     ssd1306_set_text(127-54, 0, 1, "VOLTMETER", 1);	// 54 pixels wide
 
     // Render the bottom button options
-	ssd1306_fill_rect(0, 55, 127, 8, 1);
-    ssd1306_set_text(8, 56, 0, "HOME", 1);
-    ssd1306_set_text(36, 56, 0, "", 1);
+	//ssd1306_fill_rect(0, 55, 127, 8, 1);
+    //ssd1306_set_text(8, 56, 0, "HOME", 1);
+    //ssd1306_set_text(36, 56, 0, "", 1);
     //ssd1306_set_text(64, 56, 0, "UNIT", 1);
-    ssd1306_set_text(96, 56, 0, "STOP", 1);
-    ssd1306_set_text(90, 32, 1, "mVOLTS", 1);
+    //ssd1306_set_text(96, 56, 0, "STOP", 1);
+    //ssd1306_set_text(90, 32, 1, "mVOLTS", 1);
 
     ssd1306_refresh();
 }
