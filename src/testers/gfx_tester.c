@@ -66,7 +66,7 @@ static int gfx_tester_scope(const uint16_t *waveform, uint16_t offset)
 	gfx_graticule(0, 16, &grcfg, 1);
 
 	// Render a sample sine wave
-	gfx_waveform_64_32(0, 16, 1, waveform, offset, sizeof(waveform)/2, 0);
+	gfx_waveform_64_32(0, 16, 1, waveform, offset, sizeof(waveform)/2, 0, 0);
 
 	// Render some labels
 	gfx_printdec(70, 16, waveform[(offset + 32) % 64], 1, 1);
@@ -107,7 +107,7 @@ static int gfx_tester_wavegen(const uint16_t *waveform)
 	gfx_graticule(0, 16, &grcfg, 1);
 
 	// Render a sample sine wave
-	gfx_waveform_64_32(0, 16, 1, waveform, 0, sizeof(waveform)/2, 0);
+	gfx_waveform_64_32(0, 16, 1, waveform, 0, sizeof(waveform)/2, 0, 0);
 
 	// Render some labels
     ssd1306_set_text(70, 16, 1, "WFRM SINE", 1);

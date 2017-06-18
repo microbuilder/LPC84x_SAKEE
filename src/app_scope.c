@@ -19,11 +19,11 @@
 #include "gfx.h"
 #include "app_scope.h"
 
-void app_scope_init(void)
+void app_scope_init(app_scope_rate_t rate)
 {
 	// Initialize the DMA and systick based ADC sampler
 	adc_dma_init();
-	adc_dma_set_rate(100); // Set the ADC sample rate in microseconds
+	adc_dma_set_rate(rate); // Set the ADC sample rate in microseconds
 
 	ssd1306_clear();
 
@@ -64,7 +64,7 @@ void app_scope_render_waveform(int16_t sample, int32_t offset_us)
 	// Make sure we have at least 32 samples before the trigger, or start at 0 if less
 	uint16_t start = sample >= 32 ? sample - 32 : 0;
 	// ToDo: Check for overflow in adc_buffer
-	gfx_waveform_64_32(0, 16, 1, adc_dma_get_buffer(), start, 1024, 4);
+	gfx_waveform_64_32(0, 16, 1, adc_dma_get_buffer(), start, 1024, 4, 1);
 
 	// Render the measurement point triangle
 	ssd1306_set_pixel(32, 13, 1);

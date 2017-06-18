@@ -138,6 +138,8 @@ void adc_dma_init(void)
   // Enable the DMA interrupt in the NVIC
   NVIC_EnableIRQ(DMA_IRQn);
 
+  /*------------- MRT -------------*/
+
   // Setup MRT as sampling timer
   LPC_SYSCON->SYSAHBCLKCTRL0 |= MRT;
 
@@ -148,8 +150,16 @@ void adc_dma_init(void)
   LPC_MRT->Channel[0].CTRL = (MRT_Repeat<<MRT_MODE) | (1<<MRT_INTEN);
 }
 
-void adc_dma_set_rate(uint32_t period_us)
+int adc_dma_set_rate(uint32_t period_us)
 {
+  // At 12MHz one tick is 80ns (0.08us), and a single ADC
+  // transaction takes minimum 25 ticks so the minimum same rate
+  // is 2us (0.08*25) or 500kHz.
+  if (period_us < 2)
+  {
+	  return -1;
+  }
+
   LPC_MRT->Channel[0].INTVAL = (system_ahb_clk / 1000000) * period_us;
 
   // Store value in us for later reference
@@ -157,6 +167,8 @@ void adc_dma_set_rate(uint32_t period_us)
 
   // Disable sampling timer
   disable_sample_timer();
+
+  return 0;
 }
 
 uint32_t adc_dma_get_rate(void)

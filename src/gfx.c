@@ -12,7 +12,30 @@
 #include "gfx.h"
 #include "ssd1306.h"
 
-int gfx_waveform_64_32(uint8_t x, uint8_t y, uint8_t color, const uint16_t *wform, uint16_t offset, uint16_t bufsize, uint8_t rshift)
+int gfx_bar(uint8_t x, uint8_t ybase, uint8_t color, uint8_t height)
+{
+	if (ybase - height > 128)
+	{
+		// Overflow detection
+		return 1;
+	}
+
+	if (!height)
+	{
+		ssd1306_set_pixel(x, ybase, color);
+	}
+	else
+	{
+		for (uint8_t i = 0; i<height; i++)
+		{
+			ssd1306_set_pixel(x, ybase-i, color);
+		}
+	}
+
+	return 0;
+}
+
+int gfx_waveform_64_32(uint8_t x, uint8_t y, uint8_t color, const uint16_t *wform, uint16_t offset, uint16_t bufsize, uint8_t rshift, uint8_t bar)
 {
 	uint16_t i,o;
 
@@ -28,7 +51,14 @@ int gfx_waveform_64_32(uint8_t x, uint8_t y, uint8_t color, const uint16_t *wfor
 		// Calculate the offset in the lookup table if requested
 		o = offset ? (i + offset) : i; // % bufsize : i;
 		// (12-bit data/32 pixels = 128 lsbs per pixel)
-		ssd1306_set_pixel(x+i,y+32-(wform[o]>>rshift)/128 , color);
+		if (bar)
+		{
+			gfx_bar(x+i,y+32, color, (wform[o]>>rshift)/128);
+		}
+		else
+		{
+			ssd1306_set_pixel(x+i,y+32-(wform[o]>>rshift)/128, color);
+		}
 	}
 
 	return 0;

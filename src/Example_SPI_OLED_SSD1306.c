@@ -159,7 +159,7 @@ int main(void)
 
 // Scope App
 #if 1
-	app_scope_init();
+	app_scope_init(APP_SCOPE_RATE_100_KHZ);
 	while(1)
 	{
 		app_scope_run();
