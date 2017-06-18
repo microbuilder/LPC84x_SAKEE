@@ -35,9 +35,9 @@ int gfx_bar(uint8_t x, uint8_t ybase, uint8_t color, uint8_t height)
 	return 0;
 }
 
-int gfx_waveform_64_32(uint8_t x, uint8_t y, uint8_t color, const uint16_t *wform, uint16_t offset, uint16_t bufsize, uint8_t rshift, uint8_t bar)
+int gfx_waveform_64_32(uint8_t x, uint8_t y, uint8_t color, const uint16_t *wform, int16_t offset, uint16_t bufsize, uint8_t rshift, uint8_t bar)
 {
-	uint16_t i,o;
+	int16_t i,o;
 
 	// Make sure the offset is in range
 	if (offset >= bufsize)
@@ -45,11 +45,18 @@ int gfx_waveform_64_32(uint8_t x, uint8_t y, uint8_t color, const uint16_t *wfor
 		return 1;
 	}
 
-	// Render a 64 sample 10-bit waveform into a 64x32 window
+	// Ignore negative offset for now!
+	if (offset < 0)
+	{
+		return 2;
+	}
+
+	// Render a 64 sample 12-bit waveform into a 64x32 window
 	for (i=0; i<64; i++)
 	{
 		// Calculate the offset in the lookup table if requested
-		o = offset ? (i + offset) : i; // % bufsize : i;
+		o = offset ? (i + offset) : i;
+		// Render a line of data in the waveform
 		// (12-bit data/32 pixels = 128 lsbs per pixel)
 		if (bar)
 		{

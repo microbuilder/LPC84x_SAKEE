@@ -20,13 +20,14 @@
 #include "LPC8xx.h"
 #include "config.h"
 
-void    qei_init        (void);
+void    qei_init           (void);
 
-int32_t qei_abs_step    (void);
-int32_t qei_offset_step (void);
-void    qei_reset_step  (void);
+int32_t qei_abs_step       (void);
+int32_t qei_offset_step    (void);
+void    qei_reset_step     (void);
+void    qei_reset_step_val (int32_t value);
 
-uint8_t qei_read_pin(void);
+uint8_t qei_read_pin       (void);
 
 #ifdef __cplusplus
  }

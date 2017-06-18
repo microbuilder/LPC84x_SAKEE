@@ -362,10 +362,8 @@ void ADC_THCMP_IRQHandler(void)
     uint16_t offset_countdown = ((LPC_DMA->CHANNEL[0].XFERCFG & 0xFFFF0000) >> 16);
     _adc_dma_trigger_offset = (DMA_BUFFER_SIZE-1) - offset_countdown - 1;
 
-    // Disable the interrupt
+    // Disable the threshold interrupt
     NVIC_DisableIRQ(ADC_THCMP_IRQn);
-    // Mark 2nd Descriptor as valid
-    // LPC_DMA->CHANNEL[0].XFERCFG & 0xFFFF0000;
   }
 
   LPC_ADC->FLAGS = intsts; // clear interrupts

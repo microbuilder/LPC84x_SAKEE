@@ -159,6 +159,7 @@ int main(void)
 
 // Scope App
 #if 1
+	// Init scope at 100kHz
 	app_scope_init(APP_SCOPE_RATE_100_KHZ);
 	while(1)
 	{

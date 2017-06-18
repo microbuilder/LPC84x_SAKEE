@@ -45,7 +45,7 @@ static const uint16_t gfx_tester_expdecay_wave[64] = {
 	0x01f, 0x01d, 0x01b, 0x01a, 0x018, 0x017, 0x015, 0x014
 };
 
-static int gfx_tester_scope(const uint16_t *waveform, uint16_t offset)
+static int gfx_tester_scope(const uint16_t *waveform, int16_t offset)
 {
 	gfx_graticule_cfg_t grcfg =
 	{

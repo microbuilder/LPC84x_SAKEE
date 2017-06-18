@@ -54,6 +54,12 @@ void qei_reset_step (void)
   _qei_step = 0;
 }
 
+// Sets the step counter to a specific value to invalidate clicks in certain situations
+void qei_reset_step_val (int32_t value)
+{
+  _qei_step = value;
+}
+
 void qei_init(void)
 {
   LPC_SYSCON->SYSAHBCLKCTRL0 |= (GPIO_INT);
