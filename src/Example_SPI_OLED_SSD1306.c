@@ -69,12 +69,12 @@
  WAVEGEN DAC OUTPUT
  LPC    ARD    Description
  -----  ---    -----------
- P0.29         DAC1 Output
+ P0.29  A5     DAC1 Output
 
  CONTINUITY TESTER
  LPC    ARD    Description
  -----  ---    -----------
- P0.17         DAC0 Output
+ P0.17  A4     DAC0 Output
 
  LEDS
  LPC    ARD   Description
