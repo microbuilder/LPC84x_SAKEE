@@ -60,16 +60,18 @@ void app_scope_render_waveform(int16_t sample, int32_t offset_us)
 	// ToDo: Check for overflow in adc_buffer
 	gfx_waveform_64_32(0, 16, 1, adc_dma_get_buffer(), start, 2048, 4, 1);
 
+	uint8_t meas_x = sample >= 32 ? 32 : sample;
+
 	// Render the measurement point triangle
-	ssd1306_set_pixel(32, 13, 1);
-	ssd1306_set_pixel(31, 12, 1);
-	ssd1306_set_pixel(32, 12, 1);
-	ssd1306_set_pixel(33, 12, 1);
-	ssd1306_set_pixel(30, 11, 1);
-	ssd1306_set_pixel(31, 11, 1);
-	ssd1306_set_pixel(32, 11, 1);
-	ssd1306_set_pixel(33, 11, 1);
-	ssd1306_set_pixel(34, 11, 1);
+	ssd1306_set_pixel(meas_x, 13, 1);
+	ssd1306_set_pixel(meas_x-1, 12, 1);
+	ssd1306_set_pixel(meas_x, 12, 1);
+	ssd1306_set_pixel(meas_x+1, 12, 1);
+	ssd1306_set_pixel(meas_x-2, 11, 1);
+	ssd1306_set_pixel(meas_x-1, 11, 1);
+	ssd1306_set_pixel(meas_x, 11, 1);
+	ssd1306_set_pixel(meas_x+1, 11, 1);
+	ssd1306_set_pixel(meas_x+2, 11, 1);
 
 	// Labels
 	uint16_t trig = adc_dma_get_buffer()[sample]>>4;
@@ -78,7 +80,15 @@ void app_scope_render_waveform(int16_t sample, int32_t offset_us)
 	gfx_printdec(70, 16, (int32_t)trig_mv, 1, 1);
 	ssd1306_set_text(70, 16, 1, "        mV", 1);
 	ssd1306_set_text(70, 24, 1, "        us", 1);
-	gfx_printdec(70, 24, offset_us, 1, 1);
+	if (offset_us >= 0)
+	{
+		ssd1306_set_text(70, 24, 1, "+", 1);
+		gfx_printdec(76, 24, offset_us, 1, 1);
+	}
+	else
+	{
+		gfx_printdec(70, 24, offset_us, 1, 1);
+	}
 	ssd1306_set_text(70, 35, 1, "    us/div", 1);
 	gfx_printdec(70, 35, (int32_t)us_per_div, 1, 1);
 	ssd1306_set_text(70, 43, 1, "    mV/div", 1);
@@ -136,9 +146,9 @@ void app_scope_arm_trigger(void)
 		// QEI scroll = adjust waveform offset
 		int32_t abs = qei_abs_step();
 		// Don't allow scrolling outside the leading edge of the waveform
-		if (sample+abs < 32)
+		if (sample+abs <= 0)
 		{
-			abs = 32-sample;
+			abs = sample * -1;
 			qei_reset_step_val(abs);
 		}
 		// Stay within sample+1K sample upper limit
