@@ -33,8 +33,8 @@
 #include "app_vm.h"
 #include "app_scope.h"
 #include "app_i2cscan.h"
-#include "app_cont.h"
 #include "app_wavegen.h"
+#include "app_cont.h"
 
 /*
  Pins used in this application:

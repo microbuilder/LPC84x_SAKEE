@@ -25,6 +25,7 @@ void app_menu_render();
 
 void app_menu_init(void)
 {
+	ssd1306_init();		// Reset the display
     button_init();
 }
 
