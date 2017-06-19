@@ -34,6 +34,7 @@
 #include "app_scope.h"
 #include "app_i2cscan.h"
 #include "app_cont.h"
+#include "app_wavegen.h"
 
 /*
  Pins used in this application:
@@ -138,6 +139,8 @@ int main(void)
 			break;
 		case APP_MENU_OPTION_WAVEGEN:
 			// Init wavegen
+			app_wavegen_init();
+			app_wavegen_run();
 			break;
 		case APP_MENU_OPTION_CONTINUITY:
 			// Init continuity tester
