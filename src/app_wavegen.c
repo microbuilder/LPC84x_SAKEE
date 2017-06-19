@@ -14,9 +14,20 @@
 #include "config.h"
 #include "delay.h"
 #include "button.h"
+#include "qei.h"
 #include "gfx.h"
 #include "app_wavegen.h"
 #include "dac_wavegen.h"
+
+typedef enum
+{
+	APP_WAVEGEN_WAVE_SINE = 0,
+	APP_WAVEGEN_WAVE_TRIANGLE = 1,
+	APP_WAVEGEN_WAVE_EXPDECAY = 2,
+	APP_WAVEGEN_WAVE_LAST
+} app_wavegen_wave_t;
+
+static app_wavegen_wave_t _app_wavegen_curwave = APP_WAVEGEN_WAVE_SINE;
 
 static const uint16_t app_wavegen_sine_wave[64] = {
 	0x200, 0x232, 0x263, 0x294, 0x2c3, 0x2f1, 0x31c, 0x344,
@@ -44,7 +55,7 @@ static const uint16_t app_wavegen_expdecay_wave[64] = {
 	0x3ff, 0x3c1, 0x387, 0x350, 0x31d, 0x2ec, 0x2bf, 0x294,
 	0x26c, 0x247, 0x224, 0x202, 0x1e3, 0x1c6, 0x1aa, 0x191,
 	0x178, 0x162, 0x14c, 0x138, 0x125, 0x113, 0x103, 0x0f3,
-	0x0e4, 0x0d6, 0x0c9, 0x0bd, 0x0b2, 0x0a7, 0x90d, 0x093,
+	0x0e4, 0x0d6, 0x0c9, 0x0bd, 0x0b2, 0x0a7, 0x09d, 0x093,
 	0x08a, 0x082, 0x07a, 0x073, 0x06c, 0x065, 0x05f, 0x059,
 	0x054, 0x04f, 0x04a, 0x046, 0x041, 0x03d, 0x03a, 0x036,
 	0x033, 0x030, 0x02d, 0x02a, 0x028, 0x025, 0x023, 0x021,
@@ -69,6 +80,7 @@ void app_wavegen_render_setup()
       .block_spacing = 8	// Each block is 8x8 pixels
   };
 
+  ssd1306_init();
   ssd1306_clear();
 
   // Render the title bars
@@ -79,14 +91,28 @@ void app_wavegen_render_setup()
   // Render the graticule and waveform
   gfx_graticule(0, 16, &grcfg, 1);
 
-  // Render a sine wave
-  gfx_waveform_64_32_10bit(0, 16, 1, app_wavegen_sine_wave, 0, sizeof(app_wavegen_sine_wave) / 2, 0, 0);
-
-  // generate sine wave at 440 Herts
-  dac_wavegen_run(WAVEGEN_DAC, app_wavegen_sine_wave, sizeof(app_wavegen_sine_wave)/2, 440);
+  // Render a waveform
+  switch(_app_wavegen_curwave)
+  {
+  	  case APP_WAVEGEN_WAVE_LAST:
+	  case APP_WAVEGEN_WAVE_SINE:
+		  gfx_waveform_64_32_10bit(0, 16, 1, app_wavegen_sine_wave, 0, sizeof(app_wavegen_sine_wave) / 2, 0, 0);
+		  dac_wavegen_run(WAVEGEN_DAC, app_wavegen_sine_wave, sizeof(app_wavegen_sine_wave)/2, 440);
+		  ssd1306_set_text(70, 16, 1, "WFRM SINE", 1);
+		  break;
+	  case APP_WAVEGEN_WAVE_TRIANGLE:
+		  gfx_waveform_64_32_10bit(0, 16, 1, app_wavegen_triangle_wave, 0, sizeof(app_wavegen_triangle_wave) / 2, 0, 0);
+		  dac_wavegen_run(WAVEGEN_DAC, app_wavegen_triangle_wave, sizeof(app_wavegen_triangle_wave)/2, 440);
+		  ssd1306_set_text(70, 16, 1, "WFRM TRIA", 1);
+		  break;
+	  case APP_WAVEGEN_WAVE_EXPDECAY:
+		  gfx_waveform_64_32_10bit(0, 16, 1, app_wavegen_expdecay_wave, 0, sizeof(app_wavegen_expdecay_wave) / 2, 0, 0);
+		  dac_wavegen_run(WAVEGEN_DAC, app_wavegen_expdecay_wave, sizeof(app_wavegen_expdecay_wave)/2, 440);
+		  ssd1306_set_text(70, 16, 1, "WFRM EXPO", 1);
+		  break;
+  }
 
   // Render some labels
-  ssd1306_set_text(70, 16, 1, "WFRM SINE", 1);
   ssd1306_set_text(70, 24, 1, "FREQ 440 Hz", 1);
   ssd1306_set_text(70, 32, 1, "AMPL 3.3 V", 1);
 
@@ -97,9 +123,33 @@ void app_wavegen_run(void)
 {
 	app_wavegen_render_setup();
 
+	// Reset the QEI encoder position counter
+	int32_t last_position_qei = 0;
+	qei_reset_step();
+
 	while (!button_pressed())
 	{
-
+		// Check for a scroll request on the QEI
+        // Adjust the trigger level by default if any rotation occurs
+		int32_t abs = qei_abs_step();
+		// Adjust waveform offset on qei scroll
+		if (abs != last_position_qei)
+		{
+			int16_t pos = (int16_t)_app_wavegen_curwave;
+			pos += (abs - last_position_qei);
+			if (pos > APP_WAVEGEN_WAVE_EXPDECAY)
+			{
+				pos = APP_WAVEGEN_WAVE_SINE;
+			}
+			if (pos < 0)
+			{
+				pos = APP_WAVEGEN_WAVE_EXPDECAY;
+			}
+			_app_wavegen_curwave = (app_wavegen_wave_t)pos;
+			app_wavegen_render_setup();
+			ssd1306_refresh();
+			last_position_qei = abs;
+		}
 	}
 
 	dac_wavegen_stop(WAVEGEN_DAC);
