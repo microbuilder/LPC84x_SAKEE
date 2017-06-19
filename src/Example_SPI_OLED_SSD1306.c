@@ -69,6 +69,7 @@
  WAVEGEN DAC OUTPUT
  LPC    ARD    Description
  -----  ---    -----------
+ P0.18         DAC1 Enable (Analog Switch)
  P0.29  A5     DAC1 Output
 
  CONTINUITY TESTER

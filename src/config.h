@@ -48,9 +48,14 @@
 // PIN config
 #define LED_PIN     (P0_0)
 
-#define BUTTON_PIN  (P0_19)
-#define QEI_A_PIN   (P0_20)
-#define QEI_B_PIN   (P0_21)
+#define BUTTON_PIN   (P0_19)
+#define QEI_A_PIN    (P0_20)
+#define QEI_B_PIN    (P0_21)
+#define DAC1EN_PIN   (P0_18)
+#define BUTTON_ISP	 (P0_12)
+#define BUTTON_WAKE  (P0_4)
+#define BUTTON_USER1 (P0_13)
+#define BUTTON_USER2 (P0_7)
 
 #define ADC_CHANNEL (2) // Pin P0.14 (A0)
 #define WAVEGEN_DAC (1) // 0 = P0.17/ANALOG4, 1 = 0.29/ANALOG5

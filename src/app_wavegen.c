@@ -97,23 +97,23 @@ void app_wavegen_render_setup()
   	  case APP_WAVEGEN_WAVE_LAST:
 	  case APP_WAVEGEN_WAVE_SINE:
 		  gfx_waveform_64_32_10bit(0, 16, 1, app_wavegen_sine_wave, 0, sizeof(app_wavegen_sine_wave) / 2, 0, 0);
-		  dac_wavegen_run(WAVEGEN_DAC, app_wavegen_sine_wave, sizeof(app_wavegen_sine_wave)/2, 440);
+		  dac_wavegen_run(WAVEGEN_DAC, app_wavegen_sine_wave, sizeof(app_wavegen_sine_wave)/2, 200);
 		  ssd1306_set_text(70, 16, 1, "WFRM SINE", 1);
 		  break;
 	  case APP_WAVEGEN_WAVE_TRIANGLE:
 		  gfx_waveform_64_32_10bit(0, 16, 1, app_wavegen_triangle_wave, 0, sizeof(app_wavegen_triangle_wave) / 2, 0, 0);
-		  dac_wavegen_run(WAVEGEN_DAC, app_wavegen_triangle_wave, sizeof(app_wavegen_triangle_wave)/2, 440);
+		  dac_wavegen_run(WAVEGEN_DAC, app_wavegen_triangle_wave, sizeof(app_wavegen_triangle_wave)/2, 200);
 		  ssd1306_set_text(70, 16, 1, "WFRM TRIA", 1);
 		  break;
 	  case APP_WAVEGEN_WAVE_EXPDECAY:
 		  gfx_waveform_64_32_10bit(0, 16, 1, app_wavegen_expdecay_wave, 0, sizeof(app_wavegen_expdecay_wave) / 2, 0, 0);
-		  dac_wavegen_run(WAVEGEN_DAC, app_wavegen_expdecay_wave, sizeof(app_wavegen_expdecay_wave)/2, 440);
+		  dac_wavegen_run(WAVEGEN_DAC, app_wavegen_expdecay_wave, sizeof(app_wavegen_expdecay_wave)/2, 200);
 		  ssd1306_set_text(70, 16, 1, "WFRM EXPO", 1);
 		  break;
   }
 
   // Render some labels
-  ssd1306_set_text(70, 24, 1, "FREQ 440 Hz", 1);
+  ssd1306_set_text(70, 24, 1, "FREQ 200 Hz", 1);
   ssd1306_set_text(70, 32, 1, "AMPL 3.3 V", 1);
 
   ssd1306_refresh();
@@ -129,6 +129,12 @@ void app_wavegen_run(void)
 
 	while (!button_pressed())
 	{
+		/*
+	    // Enable speaker or DAC GPIO
+		GPIOSetDir(DAC1EN_PIN/32, DAC1EN_PIN%32, 1);
+		LPC_GPIO_PORT->CLR0 = (1 << DAC1EN_PIN);
+		*/
+
 		// Check for a scroll request on the QEI
         // Adjust the trigger level by default if any rotation occurs
 		int32_t abs = qei_abs_step();

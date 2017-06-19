@@ -13,6 +13,7 @@
 #include "swm.h"
 #include "dac.h"
 #include "gpio.h"
+#include "config.h"
 #include "dac_wavegen.h"
 
 #include "chip_setup.h"
