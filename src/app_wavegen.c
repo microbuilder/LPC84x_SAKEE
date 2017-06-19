@@ -55,7 +55,7 @@ void app_wavegen_init(void)
 {
   ssd1306_clear();
   ssd1306_refresh();
-  dac_wavegen_init(0);
+  dac_wavegen_init(WAVEGEN_DAC);
 }
 
 void app_wavegen_render_setup()
@@ -83,7 +83,7 @@ void app_wavegen_render_setup()
   gfx_waveform_64_32_10bit(0, 16, 1, app_wavegen_sine_wave, 0, sizeof(app_wavegen_sine_wave) / 2, 0, 0);
 
   // generate sine wave at 440 Herts
-  dac_wavegen_run(0, app_wavegen_sine_wave, sizeof(app_wavegen_sine_wave)/2, 440);
+  dac_wavegen_run(WAVEGEN_DAC, app_wavegen_sine_wave, sizeof(app_wavegen_sine_wave)/2, 440);
 
   // Render some labels
   ssd1306_set_text(70, 16, 1, "WFRM SINE", 1);
@@ -102,5 +102,5 @@ void app_wavegen_run(void)
 
 	}
 
-	dac_wavegen_stop(0);
+	dac_wavegen_stop(WAVEGEN_DAC);
 }

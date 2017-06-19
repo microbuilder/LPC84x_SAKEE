@@ -53,6 +53,7 @@
 #define QEI_B_PIN   (P0_21)
 
 #define ADC_CHANNEL (2) // Pin P0.14 (A0)
+#define WAVEGEN_DAC (1) // 0 = P0.17/ANALOG4, 1 = 0.29/ANALOG5
 
 // Common functions
 #define bit(_n)               ( 1 << (_n) )
