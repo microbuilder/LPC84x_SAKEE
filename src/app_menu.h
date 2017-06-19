@@ -23,6 +23,6 @@ typedef enum
 } app_menu_option_t;
 
 void app_menu_init(void);
-app_menu_option_t app_menu_wait(void);
+app_menu_option_t app_menu_run(void);
 
 #endif /* APP_MENU_H_ */

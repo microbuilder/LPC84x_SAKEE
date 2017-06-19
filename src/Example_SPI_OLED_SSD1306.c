@@ -108,7 +108,9 @@ int main(void)
 	while (1)
 	{
 		app_menu_init();
-		app_menu_option_t option = app_menu_wait();
+		app_menu_option_t option = app_menu_run();
+
+		// Run the appropriate sub-app
 		switch (option)
 		{
 		case APP_MENU_OPTION_LAST:

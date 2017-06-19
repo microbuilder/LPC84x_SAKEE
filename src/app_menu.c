@@ -19,24 +19,13 @@
 #include "gfx.h"
 #include "app_menu.h"
 
-int32_t _app_menu_selected = APP_MENU_OPTION_ABOUT;
+static int32_t _app_menu_selected = APP_MENU_OPTION_ABOUT;
 
 void app_menu_render();
 
 void app_menu_init(void)
 {
-	ssd1306_clear();
-
-	// Render the title bars
-    ssd1306_set_text(0, 0, 1, "NXP SAKEE", 1);
-    ssd1306_set_text(127-54, 0, 1, "MAIN MENU", 1);	// 54 pixels wide
-
-    ssd1306_refresh();
-
     button_init();
-    qei_reset_step();
-
-    app_menu_render();
 }
 
 void app_menu_render()
@@ -69,11 +58,13 @@ void app_menu_render()
     ssd1306_refresh();
 }
 
-app_menu_option_t app_menu_wait(void)
+app_menu_option_t app_menu_run(void)
 {
 	// Reset the QEI encoder position counter
 	int32_t last_position_qei = 0;
 	qei_reset_step();
+	_app_menu_selected = APP_MENU_OPTION_ABOUT;
+    app_menu_render();
 
     // Wait for the button to execute the selected sub-app
     while (!button_pressed())
@@ -88,7 +79,7 @@ app_menu_option_t app_menu_wait(void)
 			{
 				_app_menu_selected = APP_MENU_OPTION_LAST - 1;
 			}
-			if (_app_menu_selected == APP_MENU_OPTION_LAST)
+			if (_app_menu_selected >= APP_MENU_OPTION_LAST)
 			{
 				_app_menu_selected = APP_MENU_OPTION_ABOUT;
 			}
