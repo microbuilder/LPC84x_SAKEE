@@ -1,6 +1,6 @@
 /**************************************************************************/
 /*!
-    @file     app_wavegen.c
+    @file     dac_wavegen.h
     @author   hathach
 
     @section LICENSE
@@ -33,17 +33,19 @@
     SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 /**************************************************************************/
+#ifndef DAC_WAVEGEN_H_
+#define DAC_WAVEGEN_H_
 
-#include "app_wavegen.h"
-#include "dac_wavegen.h"
 
-void app_wavegen_init(void)
-{
-  dac_wavegen_init();
-}
+#ifdef __cplusplus
+ extern "C" {
+#endif
 
-void app_wavegen_run(void)
-{
+void dac_wavegen_init(void);
 
-}
 
+#ifdef __cplusplus
+ }
+#endif
+
+#endif /* DAC_WAVEGEN_H_ */
