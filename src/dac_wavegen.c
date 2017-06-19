@@ -20,8 +20,6 @@
 #define EN_AUDIO 1                         // '1' to enable, '0' to disable the audio amp.
 #define DAC1_IRQHandler PININT5_IRQHandler // DAC1 shares NVIC slot with PININT5 for LPC845
 
-#define SamplesPerCycle (sizeof(waveform)/4)
-
 uint16_t const* _sample_data  = NULL;
 uint32_t        _sample_count = 0;
 
@@ -91,6 +89,7 @@ void DACn_IRQHandler(void)
 
   if (idx >= _sample_count) idx = 0;
 
+  // ToDo: We need to shift the DAC values 6 bits for now ...
+  // adjust the lookup tables to be pre-shifted instead!
   LPC_DACn->CR = (_sample_data[idx++] << 6) & 0x0000FFFF;
 }
-
