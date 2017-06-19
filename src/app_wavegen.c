@@ -89,7 +89,7 @@ void app_wavegen_render_setup()
   gfx_graticule(0, 16, &grcfg, 1);
 
   // Render a sine wave
-  gfx_waveform_64_32(0, 16, 1, app_wavegen_sine_wave, 0, sizeof(app_wavegen_sine_wave) / 2, 0, 0);
+  gfx_waveform_64_32_10bit(0, 16, 1, app_wavegen_sine_wave, 0, sizeof(app_wavegen_sine_wave) / 2, 0, 0);
 
   // generate sine wave at 440 Herts
   dac_wavegen_run(sine_waveform, sizeof(sine_waveform)/2, 440);
@@ -97,7 +97,7 @@ void app_wavegen_render_setup()
   // Render some labels
   ssd1306_set_text(70, 16, 1, "WFRM SINE", 1);
   ssd1306_set_text(70, 24, 1, "FREQ 440 Hz", 1);
-  ssd1306_set_text(70, 32, 1, "AMPL 825 mV", 1);
+  ssd1306_set_text(70, 32, 1, "AMPL 3.3 V", 1);
 
   ssd1306_refresh();
 }
@@ -110,4 +110,6 @@ void app_wavegen_run(void)
 	{
 
 	}
+
+	dac_wavegen_stop();
 }

@@ -66,6 +66,16 @@
  P0.10  D15   I2C0 SCL
  P0.11  D14   I2C0 SDA
 
+ WAVEGEN DAC OUTPUT
+ LPC    ARD    Description
+ -----  ---    -----------
+ P0.29         DAC1 Output
+
+ CONTINUITY TESTER
+ LPC    ARD    Description
+ -----  ---    -----------
+ P0.17         DAC0 Output
+
  LEDS
  LPC    ARD   Description
  -----  ---   -----------
