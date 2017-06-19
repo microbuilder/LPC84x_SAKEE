@@ -1,6 +1,6 @@
 /*
 ===============================================================================
- Name        : app_i2cscan.h
+ Name        : app_about.h
  Author      : $(author)
  Version     :
  Copyright   : $(copyright)
@@ -8,10 +8,10 @@
 ===============================================================================
  */
 
-#ifndef APP_I2CSCAN_H_
-#define APP_I2CSCAN_H_
+#ifndef APP_ABOUT_H_
+#define APP_ABOUT_H_
 
-void app_i2cscan_init(void);
-void app_i2cscan_run(void);
+void app_about_init(void);
+void app_about_run(void);
 
-#endif /* APP_I2CSCAN_H_ */
+#endif /* APP_ABOUT_H_ */

@@ -29,9 +29,11 @@
 #include "qei.h"
 
 #include "app_menu.h"
+#include "app_about.h"
 #include "app_vm.h"
 #include "app_scope.h"
 #include "app_i2cscan.h"
+#include "app_cont.h"
 
 /*
  Pins used in this application:
@@ -116,6 +118,8 @@ int main(void)
 		case APP_MENU_OPTION_LAST:
 		case APP_MENU_OPTION_ABOUT:
 			// Display 'About' menu
+			app_about_init();
+			app_about_run();
 			break;
 		case APP_MENU_OPTION_VOLTMETER:
 			// Init voltmeter
@@ -137,6 +141,8 @@ int main(void)
 			break;
 		case APP_MENU_OPTION_CONTINUITY:
 			// Init continuity tester
+			app_cont_init();
+			app_cont_run();
 			break;
 		}
 	}
