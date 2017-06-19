@@ -21,6 +21,8 @@
 
 int32_t _app_menu_selected = APP_MENU_OPTION_ABOUT;
 
+void app_menu_render();
+
 void app_menu_init(void)
 {
 	ssd1306_clear();
@@ -45,12 +47,15 @@ void app_menu_render()
     ssd1306_set_text(0, 0, 1, "NXP SAKEE", 1);
     ssd1306_set_text(127-54, 0, 1, "MAIN MENU", 1);	// 54 pixels wide
 
-    ssd1306_set_text(8, 16, 1, "ABOUT", 1);
-    ssd1306_set_text(8, 24, 1, "VOLTMETER", 1);
-    ssd1306_set_text(8, 32, 1, "OSCILLOSCOPE", 1);
+    ssd1306_set_text(10, 12, 1, "ABOUT", 1);
+    ssd1306_set_text(10, 20, 1, "VOLTMETER", 1);
+    ssd1306_set_text(10, 28, 1, "OSCILLOSCOPE", 1);
+    ssd1306_set_text(10, 36, 1, "I2C BUS SCANNER", 1);
+    ssd1306_set_text(10, 44, 1, "WAVEGEN", 1);
+    ssd1306_set_text(10, 52, 1, "CONTINUITY TESTER", 1);
 
     // Draw the selection indicator
-    uint8_t y = ((_app_menu_selected + 2) * 8) + 2;
+    uint8_t y = ((_app_menu_selected + 2) * 8) -2;
     ssd1306_set_pixel(6, y, 1);
     ssd1306_set_pixel(5, y-1, 1);
     ssd1306_set_pixel(5, y, 1);
@@ -98,20 +103,5 @@ app_menu_option_t app_menu_wait(void)
     	delay_ms(1);
     }
 
-    switch (_app_menu_selected)
-    {
-    case APP_MENU_OPTION_ABOUT:
-    	return APP_MENU_OPTION_ABOUT;
-    	break;
-    case APP_MENU_OPTION_VOLTMETER:
-    	return APP_MENU_OPTION_VOLTMETER;
-    	break;
-    case APP_MENU_OPTION_SCOPE:
-    	return APP_MENU_OPTION_SCOPE;
-    	break;
-    default:
-    	// Error!
-    	return APP_MENU_OPTION_ABOUT;
-    	break;
-    }
+    return _app_menu_selected;
 }

@@ -31,6 +31,7 @@
 #include "app_menu.h"
 #include "app_vm.h"
 #include "app_scope.h"
+#include "app_i2cscan.h"
 
 /*
  Pins used in this application:
@@ -56,10 +57,16 @@
  -----  ---   -----------
  P0.14  A0    Analog Input (ADC2)
 
+ I2C BUS SCANNER
+ LPC    ARD   Description
+ -----  ---   -----------
+ P0.10  D15   I2C0 SCL
+ P0.11  D14   I2C0 SDA
+
  LEDS
  LPC    ARD   Description
  -----  ---   -----------
- P0.0  	--	  Debug LED (GREEN)
+ P0.0  	--	  Debug LED (BLUE)
 */
 
 void led_on(void)
@@ -98,29 +105,36 @@ int main(void)
 	ssd1306_refresh();
 
 	// Display the main menu
-	app_menu_init();
 	while (1)
 	{
+		app_menu_init();
 		app_menu_option_t option = app_menu_wait();
 		switch (option)
 		{
+		case APP_MENU_OPTION_LAST:
 		case APP_MENU_OPTION_ABOUT:
+			// Display 'About' menu
 			break;
 		case APP_MENU_OPTION_VOLTMETER:
 			// Init voltmeter
 			app_vm_init();
-			while(1)
-			{
-				app_vm_refresh();
-			}
+			app_vm_run();
 			break;
 		case APP_MENU_OPTION_SCOPE:
 			// Init scope at 100kHz
 			app_scope_init(APP_SCOPE_RATE_100_KHZ);
-			while(1)
-			{
-				app_scope_run();
-			}
+			app_scope_run();
+			break;
+		case APP_MENU_OPTION_I2CSCANNER:
+			// Init I2C bus scanner
+			app_i2cscan_init();
+			app_i2cscan_run();
+			break;
+		case APP_MENU_OPTION_WAVEGEN:
+			// Init wavegen
+			break;
+		case APP_MENU_OPTION_CONTINUITY:
+			// Init continuity tester
 			break;
 		}
 	}

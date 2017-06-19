@@ -84,7 +84,7 @@ void app_scope_render_waveform(int16_t sample, int32_t offset_us)
 	ssd1306_set_text(70, 43, 1, "    mV/div", 1);
 	gfx_printdec(70, 43, (int32_t)(3300/4), 1, 1);
 
-	ssd1306_set_text(3, 55, 1, "CLICK TO RESET TRIGGER", 1);
+	ssd1306_set_text(16, 55, 1, "CLICK FOR MAIN MENU", 1);
 
 	// Refresh the display
 	ssd1306_refresh();
@@ -250,7 +250,7 @@ void app_scope_run(void)
     app_scope_render_threshold(_app_scope_thresh_l, _app_scope_thresh_h);
 
     // Help message
-	ssd1306_set_text(0, 55, 1, "ROTATE TO ADJUST TRIG L/H", 1);
+	ssd1306_set_text(0, 55, 1, "ROTATE=TRIGGER SEL=START", 1);
 
     ssd1306_refresh();
 

@@ -239,12 +239,13 @@ static char gfx_4bhex_to_char(uint8_t hex)
 
 int gfx_printhex8(uint8_t x, uint8_t y, uint8_t hex, uint8_t scale, uint8_t color)
 {
-	char c;
+	char c[2];
+	c[1] = '\0';	// null terminator
 
-	c = gfx_4bhex_to_char((hex & 0xF0)>>4);
-    ssd1306_set_text(x, y, 1, (char *)&c, scale);
-	c = gfx_4bhex_to_char(hex & 0xF);
-    ssd1306_set_text(x+(5*scale), y, color, (char *)&c, scale);
+	c[0] = gfx_4bhex_to_char((hex & 0xF0)>>4);
+    ssd1306_set_text(x, y, 1, c, scale);
+	c[0] = gfx_4bhex_to_char(hex & 0xF);
+    ssd1306_set_text(x+(5*scale), y, color, c, scale);
 
 	return 0;
 }

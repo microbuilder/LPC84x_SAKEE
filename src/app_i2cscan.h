@@ -1,17 +1,17 @@
 /*
 ===============================================================================
- Name        : app_vm.h
+ Name        : app_i2cscan.h
  Author      : $(author)
  Version     :
  Copyright   : $(copyright)
- Description :
+ Description : Main menu
 ===============================================================================
  */
 
-#ifndef APP_VM_H_
-#define APP_VM_H_
+#ifndef APP_I2CSCAN_H_
+#define APP_I2CSCAN_H_
 
-void app_vm_init(void);
-void app_vm_run(void);
+void app_i2cscan_init(void);
+void app_i2cscan_run(void);
 
-#endif /* APP_VM_H_ */
+#endif /* APP_I2CSCAN_H_ */
