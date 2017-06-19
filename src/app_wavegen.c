@@ -34,8 +34,20 @@
 */
 /**************************************************************************/
 
+#include <stdint.h>
+#include <stdbool.h>
+#include "LPC8xx.h"
 #include "app_wavegen.h"
 #include "dac_wavegen.h"
+
+const uint32_t sine_waveform[] = {32768, 39160, 45307, 50972,
+                                 55938, 60013, 63041, 64905,
+                                 65535, 64905, 63041, 60013,
+                                 55938, 50972, 45307, 39160,
+                                 32768, 26375, 20228, 14563,
+                                  9597,  5522,  2494,   630,
+                                     0,   630,  2494,  5522,
+                                  9597, 14563, 20228, 26375};
 
 void app_wavegen_init(void)
 {
@@ -44,6 +56,7 @@ void app_wavegen_init(void)
 
 void app_wavegen_run(void)
 {
-
+  // generate sine wave at 440 Herts
+  dac_wavegen_run(sine_waveform, sizeof(sine_waveform)/4, 440);
 }
 
