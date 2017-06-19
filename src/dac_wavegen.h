@@ -18,9 +18,9 @@
  extern "C" {
 #endif
 
-void dac_wavegen_init(void);
-void dac_wavegen_run(const uint16_t samples[], uint32_t count, uint32_t freq);
-void dac_wavegen_stop(void);
+void dac_wavegen_init(uint8_t dac_id);
+void dac_wavegen_run(uint8_t dac_id, const uint16_t samples[], uint32_t count, uint32_t freq);
+void dac_wavegen_stop(uint8_t dac_id);
 
 #ifdef __cplusplus
  }

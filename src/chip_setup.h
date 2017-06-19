@@ -54,7 +54,7 @@
                                    //            <13=> 4.2 MHz
                                    //            <14=> 4.4 MHz
                                    //            <15=> 4.6 MHz                             
-                                   // wdt_osc_clk = FREQSEL / (2 × (1 + DIVSEL))
+                                   // wdt_osc_clk = FREQSEL / (2 ï¿½ (1 + DIVSEL))
 
 #define SYSPLLCTRL_VAL 0x00        // bits 4:0 = MSEL: Feedback Divider Selection (reset value = 00000)
                                    // bits 6:5 = PSEL: Post Divider Selection (reset value = 00)
@@ -120,17 +120,4 @@
 #define DBGURXD __XCONCAT(U,INDEX,_RXD)
 #define DBGURST __XCONCAT(UART,INDEX,_RST_N)
 #define DBGUIRQ __XCONCAT(UART,INDEX,_IRQn)
-
-//
-// Ditto for the DAC
-//
-#define DACn            1                               // '0' for DAC0, '1' for DAC1 (amazing as that may seem)
-#define DACn_IRQn       __XCONCAT(DAC,DACn,_IRQn)       // expands to DAC0_IRQn, DAC1_IRQn, etc.
-#define DACn_IRQHandler __XCONCAT(DAC,DACn,_IRQHandler) // expands to DAC0_IRQHandler, DAC1_IRQHandler, etc.
-#define LPC_DACn        __XCONCAT(LPC_DAC,DACn,)        // expands to LPC_DAC0, LPC_DAC1, etc. 
-#define DACnum          __XCONCAT(DAC,DACn,)            // expands to DAC0, DAC1, etc.
-#define DACOUTn         __XCONCAT(DACOUT,DACn,)         // expands to DACOUT0, DACOUT1, etc.
-#define DACOUTn_PIN     __XCONCAT(DACOUT,DACn,_PIN)     // expands to DACOUT0_PIN, DACOUT1_PIN, etc.
-#define DACn_PD         __XCONCAT(DAC,DACn,_PD)         // expands to DAC0_PD, DAC1_PD, etc.
-#define CLK_DACn        __XCONCAT(CLK_DAC,DACn,)        // expands to CLK_DAC0, CLK_DAC1, etc.
 
