@@ -48,10 +48,14 @@
 // PIN config
 #define LED_PIN     (P0_0)
 
-#define BUTTON_PIN   (P0_19)
+#define DAC1EN_PIN   (P0_18)
+
+// All Buttons should be the same port (port 0)
+// Otherwise button.c need to be updated
 #define QEI_A_PIN    (P0_20)
 #define QEI_B_PIN    (P0_21)
-#define DAC1EN_PIN   (P0_18)
+#define QEI_SW_PIN   (P0_19)
+
 #define BUTTON_ISP	 (P0_12)
 #define BUTTON_WAKE  (P0_4)
 #define BUTTON_USER1 (P0_13)

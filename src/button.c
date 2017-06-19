@@ -15,17 +15,21 @@
 #include "delay.h"
 #include "button.h"
 
+#define PORT_COMMON 0
+
+static uint32_t _all_mask = bit(QEI_SW_PIN) | bit(BUTTON_ISP) | bit(BUTTON_WAKE) | bit(BUTTON_USER1) | bit(BUTTON_USER2);
+
 // Returns the button read in a 32-bit bitfield
 static inline uint32_t button_read(void)
 {
-  // button is active LOW
-  return ((~(LPC_GPIO_PORT->PIN[BUTTON_PIN/32])) & bit(BUTTON_PIN%32) );
+  // button is active LOW, invert value before compare
+  return (~LPC_GPIO_PORT->PIN[PORT_COMMON]) & _all_mask;
 }
 
 void button_init(void)
 {
 	// Initialize Button
-	GPIOSetDir(BUTTON_PIN/32, BUTTON_PIN%32, 0);
+  LPC_GPIO_PORT->DIRCLR[PORT_COMMON] = _all_mask;
 }
 
 /**
