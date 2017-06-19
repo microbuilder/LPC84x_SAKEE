@@ -36,9 +36,9 @@ void dac_wavegen_init(void)
 
   // Do the following only for DAC1
 #if (DACn == 1)
-  // Clear the PININT5 interrupt flag that may be pending and shut off clock to GPIO interrupts
+  // Clear the PININT5 interrupt flag that may be pending
   LPC_PIN_INT->IST = 1<<5;
-  LPC_SYSCON->SYSAHBCLKCTRL[0] &= ~(GPIO_INT);
+//  LPC_SYSCON->SYSAHBCLKCTRL[0] &= ~(GPIO_INT); // GPIO INT is required for QEI
   // For the audio amp on Xpresso board, enable pin as output and drive it as requested
 #ifdef XPRESSO_845_BOARD
   GPIOSetDir(AUDIO_AMP_ENABLE_PORT, AUDIO_AMP_ENABLE_PIN, OUTPUT);
