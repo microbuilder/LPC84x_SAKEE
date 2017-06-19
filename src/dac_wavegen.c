@@ -91,6 +91,6 @@ void DACn_IRQHandler(void)
 
   if (idx >= _sample_count) idx = 0;
 
-  LPC_DACn->CR = _sample_data[idx++];
+  LPC_DACn->CR = (_sample_data[idx++] << 6) & 0x0000FFFF;
 }
 
