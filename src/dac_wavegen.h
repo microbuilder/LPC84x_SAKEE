@@ -45,7 +45,7 @@
 #endif
 
 void dac_wavegen_init(void);
-void dac_wavegen_run(const uint32_t samples[], uint32_t count, uint32_t freq);
+void dac_wavegen_run(const uint16_t samples[], uint32_t count, uint32_t freq);
 void dac_wavegen_stop(void);
 
 

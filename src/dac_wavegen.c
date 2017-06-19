@@ -50,7 +50,7 @@
 
 #define SamplesPerCycle (sizeof(waveform)/4)
 
-uint32_t const* _sample_data  = NULL;
+uint16_t const* _sample_data  = NULL;
 uint32_t        _sample_count = 0;
 
 void dac_wavegen_init(void)
@@ -84,7 +84,7 @@ void dac_wavegen_init(void)
   LPC_IOCON->DACOUTn_PIN = temp;
 }
 
-void dac_wavegen_run(uint32_t const samples[], uint32_t count, uint32_t freq)
+void dac_wavegen_run(uint16_t const samples[], uint32_t count, uint32_t freq)
 {
   _sample_data  = samples;
   _sample_count = count;

@@ -51,7 +51,7 @@ static const uint16_t app_wavegen_expdecay_wave[64] = {
 	0x01f, 0x01d, 0x01b, 0x01a, 0x018, 0x017, 0x015, 0x014
 };
 
-const uint32_t sine_waveform[] = {32768, 39160, 45307, 50972,
+const uint16_t sine_waveform[] = {32768, 39160, 45307, 50972,
                                  55938, 60013, 63041, 64905,
                                  65535, 64905, 63041, 60013,
                                  55938, 50972, 45307, 39160,
@@ -91,9 +91,12 @@ void app_wavegen_render_setup()
   // Render a sine wave
   gfx_waveform_64_32(0, 16, 1, app_wavegen_sine_wave, 0, sizeof(app_wavegen_sine_wave) / 2, 0, 0);
 
+  // generate sine wave at 440 Herts
+  dac_wavegen_run(sine_waveform, sizeof(sine_waveform)/2, 440);
+
   // Render some labels
   ssd1306_set_text(70, 16, 1, "WFRM SINE", 1);
-  ssd1306_set_text(70, 24, 1, "FREQ 200 Hz", 1);
+  ssd1306_set_text(70, 24, 1, "FREQ 440 Hz", 1);
   ssd1306_set_text(70, 32, 1, "AMPL 825 mV", 1);
 
   ssd1306_refresh();
@@ -107,7 +110,4 @@ void app_wavegen_run(void)
 	{
 
 	}
-
- // generate sine wave at 440 Herts
-  dac_wavegen_run(sine_waveform, sizeof(sine_waveform)/4, 440);
 }
