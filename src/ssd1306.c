@@ -115,8 +115,6 @@ ssd1306_config_display()
 	ssd1306_command(0x80);
 	ssd1306_command(SSD1306_SETMULTIPLEX);
 	ssd1306_command(SSD1306_HEIGHT-1);				// LCD Height
-	ssd1306_command(SSD1306_SETPRECHARGE);
-	ssd1306_command(0xF1);
 	ssd1306_command(SSD1306_SETDISPLAYOFFSET);
 	ssd1306_command(0x0);
 	ssd1306_command(SSD1306_SETSTARTLINE | 0x0);
@@ -130,23 +128,27 @@ ssd1306_config_display()
 	ssd1306_command(0x12);
 	ssd1306_command(SSD1306_SETCONTRAST);
 	ssd1306_command(0xCF);
+    ssd1306_command(SSD1306_SETPRECHARGE);
+    ssd1306_command(0xF1);
 	ssd1306_command(SSD1306_SETVCOMDETECT);
 	ssd1306_command(0x40);
 	ssd1306_command(SSD1306_DISPLAYALLON_RESUME);
 	ssd1306_command(SSD1306_NORMALDISPLAY);
 	ssd1306_command(SSD1306_DEACTIVATE_SCROLL);
 
-	/*
 	ssd1306_command(SSD1306_COLUMNADDR);
 	ssd1306_command(0);
 	ssd1306_command(SSD1306_WIDTH-1);
 	ssd1306_command(SSD1306_PAGEADDR);
 	ssd1306_command(0);
 	ssd1306_command(SSD1306_HEIGHT/8-1);
-	*/
 
 	// Turn the OLED display on!
 	ssd1306_command(SSD1306_DISPLAYON);
+
+    ssd1306_command(SSD1306_SETLOWCOLUMN | 0x0);  // low col = 0
+    ssd1306_command(SSD1306_SETHIGHCOLUMN | 0x0);  // hi col = 0
+    ssd1306_command(SSD1306_SETSTARTLINE | 0x0); // line #0
 
 	return 0;
 }
@@ -238,7 +240,7 @@ ssd1306_refresh(void)
     }
 	LPC_GPIO_PORT->SET1 = (1 << (SSD1306_SSELPIN%32));	// Deassert CS
 
-	delay_ms(100);
+	delay_ms(10);
 
 	return 0;
 }
