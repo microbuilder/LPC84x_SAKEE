@@ -87,7 +87,14 @@ void app_wavegen_render_setup()
   // Render the title bars
   ssd1306_set_text(0, 0, 1, "NXP SAKEE", 1);
   ssd1306_set_text(127 - 60, 0, 1, "DAC WAVEGEN", 1);
-  ssd1306_set_text(16, 55, 1, "CLICK FOR MAIN MENU", 1);
+  //ssd1306_set_text(16, 55, 0, "CLICK FOR MAIN MENU", 1);
+
+  // Render the bottom button options
+  ssd1306_fill_rect(0, 55, 31, 8, 1);
+  ssd1306_fill_rect(32, 55, 31, 8, 1);
+  ssd1306_fill_rect(64, 55, 31, 8, 1);
+  ssd1306_fill_rect(96, 55, 32, 8, 1);
+  ssd1306_set_text(101, 56, 0, "SPKR", 1);
 
   // Render the graticule and waveform
   gfx_graticule(0, 16, &grcfg, 1);
@@ -130,6 +137,7 @@ void app_wavegen_run(void)
 
 	// Setup the analog switch that controls speaker/DACOUT
 	GPIOSetDir(DAC1EN_PIN/32, DAC1EN_PIN%32, 1);
+	LPC_GPIO_PORT->SET0 = (1 << DAC1EN_PIN);	// Default to speaker
 
 	/* Wait for the QEI switch to exit */
 	while (!(button_pressed() &  ( 1 << QEI_SW_PIN)))
