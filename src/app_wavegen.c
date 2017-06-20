@@ -140,7 +140,7 @@ void app_wavegen_run(void)
 	LPC_GPIO_PORT->SET0 = (1 << DAC1EN_PIN);	// Default to speaker
 
 	/* Wait for the QEI switch to exit */
-	while (!(button_pressed() &  ( 1 << QEI_SW_PIN)))
+	while (!(button_pressed() & (1 << QEI_SW_PIN)))
 	{
 		/* If BUTTON_USER2 is pressed, toggle speaker/DACOUT */
 		if (button_pressed() &  ( 1 << BUTTON_USER2))

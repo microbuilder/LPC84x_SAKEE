@@ -24,15 +24,61 @@ void app_vm_init(void)
 
 	ssd1306_clear();
 
-	// Setup the analog switch that controls the input
-	GPIOSetDir(AN_IN_ENPIN/32, AN_IN_ENPIN%32, 1);
-	if (AN_IN_ENPIN/32)
+	/* Analog front end setup */
+	GPIOSetDir(AN_IN_VREF_3_3V/32, AN_IN_VREF_3_3V%32, 1);				/* Straight 3.3V VRef */
+	GPIOSetDir(AN_IN_VREF_0_971V/32, AN_IN_VREF_0_971V%32, 1);			/* 240K + 100K */
+	GPIOSetDir(AN_IN_VREF_DISCON/32, AN_IN_VREF_DISCON%32, 1); 			/* No VREF (NC res) */
+	GPIOSetDir(AN_IN_VREF_2_598V/32, AN_IN_VREF_2_598V%32, 1); 			/* 2.598V VRef bypass */
+	GPIOSetDir(AN_IN_2_2PF_BLOCKING/32, AN_IN_2_2PF_BLOCKING%32, 1); 	/* 2.pF inline blocking cap bypass */
+
+	// Enable 3.3V VRef
+	if (AN_IN_VREF_3_3V/32)
 	{
-		LPC_GPIO_PORT->SET1 = (1 << (AN_IN_ENPIN%32));
+		LPC_GPIO_PORT->SET1 = (1 << (AN_IN_VREF_3_3V%32));
 	}
 	else
 	{
-		LPC_GPIO_PORT->SET0 = (1 << (AN_IN_ENPIN%32));
+		LPC_GPIO_PORT->SET0 = (1 << (AN_IN_VREF_3_3V%32));
+	}
+
+	// Disable 0.971V VRef
+	if (AN_IN_VREF_0_971V/32)
+	{
+		LPC_GPIO_PORT->CLR1 = (1 << (AN_IN_VREF_0_971V%32));
+	}
+	else
+	{
+		LPC_GPIO_PORT->CLR0 = (1 << (AN_IN_VREF_0_971V%32));
+	}
+
+	// Disable VRef disconnect
+	if (AN_IN_VREF_DISCON/32)
+	{
+		LPC_GPIO_PORT->CLR1 = (1 << (AN_IN_VREF_DISCON%32));
+	}
+	else
+	{
+		LPC_GPIO_PORT->CLR0 = (1 << (AN_IN_VREF_DISCON%32));
+	}
+
+	// Skip 2.598V (27K+100K) Voltage Divider
+	if (AN_IN_VREF_2_598V/32)
+	{
+		LPC_GPIO_PORT->SET1 = (1 << (AN_IN_VREF_2_598V%32));
+	}
+	else
+	{
+		LPC_GPIO_PORT->SET0 = (1 << (AN_IN_VREF_2_598V%32));
+	}
+
+	// Disable 2.2pF blocking cap
+	if (AN_IN_2_2PF_BLOCKING/32)
+	{
+		LPC_GPIO_PORT->SET1 = (1 << (AN_IN_2_2PF_BLOCKING%32));
+	}
+	else
+	{
+		LPC_GPIO_PORT->SET0 = (1 << (AN_IN_2_2PF_BLOCKING%32));
 	}
 
 	// Render the title bars

@@ -52,7 +52,11 @@
 #define DAC1EN_PIN   (P0_18)
 
 // Analog in enable pin
-#define AN_IN_ENPIN  (P1_3)
+#define AN_IN_VREF_3_3V      (P1_0) /* Straight 3.3V VRef */
+#define AN_IN_VREF_0_971V    (P1_1)	/* 240K + 100K */
+#define AN_IN_VREF_DISCON    (P1_2) /* No VREF (NC res) */
+#define AN_IN_VREF_2_598V    (P1_3)	/* 2.598V VRef bypass */
+#define AN_IN_2_2PF_BLOCKING (P1_4) /* 2.pF inline blocking cap bypass */
 
 // All Buttons should be the same port (port 0)
 // Otherwise button.c need to be updated
