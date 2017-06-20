@@ -13,6 +13,7 @@
 #include "swm.h"
 #include "syscon.h"
 
+#include "config.h"
 #include "button.h"
 #include "app_i2cscan.h"
 #include "gfx.h"
@@ -129,8 +130,8 @@ void app_i2cscan_run(void)
 
 	ssd1306_refresh();
 
-	// Wait for feedback to exit
-    while (!button_pressed())
+	/* Wait for the QEI switch to exit */
+	while (!(button_pressed() &  ( 1 << QEI_SW_PIN)))
     {
     }
 }

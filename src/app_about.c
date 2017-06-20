@@ -13,6 +13,7 @@
 #include "swm.h"
 #include "syscon.h"
 
+#include "config.h"
 #include "button.h"
 #include "app_about.h"
 #include "gfx.h"
@@ -31,7 +32,8 @@ void app_about_run(void)
 	ssd1306_set_text(16, 55, 1, "CLICK FOR MAIN MENU", 1);
     ssd1306_refresh();
 
-	while (!button_pressed())
+	/* Wait for the QEI switch to exit */
+	while (!(button_pressed() &  ( 1 << QEI_SW_PIN)))
 	{
 
 	}

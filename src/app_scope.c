@@ -269,7 +269,7 @@ void app_scope_run(void)
 	qei_reset_step();
 
     // Wait for the button to arm the trigger
-    while (!button_pressed())
+	while (!(button_pressed() &  ( 1 << QEI_SW_PIN)))
     {
 		// Check for a scroll request on the QEI
         // Adjust the trigger level by default if any rotation occurs

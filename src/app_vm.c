@@ -44,7 +44,8 @@ void app_vm_init(void)
 
 void app_vm_run(void)
 {
-	while (!button_pressed())
+	/* Wait for the QEI switch to exit */
+	while (!(button_pressed() &  ( 1 << QEI_SW_PIN)))
 	{
 		uint16_t v = adc_poll_read(ADC_CHANNEL);
 	    ssd1306_fill_rect(20, 20, 64, 24, 0);

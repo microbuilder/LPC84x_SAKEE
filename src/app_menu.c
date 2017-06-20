@@ -68,7 +68,7 @@ app_menu_option_t app_menu_run(void)
     app_menu_render();
 
     // Wait for the button to execute the selected sub-app
-    while (!button_pressed())
+	while (!(button_pressed() &  ( 1 << QEI_SW_PIN)))
     {
 		// Check for a scroll request on the QEI
 		int32_t abs = qei_abs_step();

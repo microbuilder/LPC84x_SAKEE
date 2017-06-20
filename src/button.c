@@ -45,7 +45,7 @@ void button_init(void)
 uint32_t button_pressed(void)
 {
   // must be exponent of 2
-  enum { MAX_CHECKS = 2, SAMPLE_TIME = 5 };
+  enum { MAX_CHECKS = 2, SAMPLE_TIME = 2 };
 
   /* Array that maintains bounce status, which is sampled
    * at 10 ms/lsb. Debounced state is valid if all values
