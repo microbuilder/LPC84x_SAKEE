@@ -48,6 +48,7 @@
 // PIN config
 #define LED_PIN     (P0_0)
 
+// Analog switch for DAC1 output to GPIO (L) or speaker (H)
 #define DAC1EN_PIN   (P0_18)
 
 // All Buttons should be the same port (port 0)

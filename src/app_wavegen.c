@@ -10,6 +10,7 @@
 
 #include "LPC8xx.h"
 #include "dac.h"
+#include "gpio.h"
 
 #include "config.h"
 #include "delay.h"
@@ -127,13 +128,18 @@ void app_wavegen_run(void)
 	int32_t last_position_qei = 0;
 	qei_reset_step();
 
-	while (!button_pressed())
+	// Setup the analog switch that controls speaker/DACOUT
+	GPIOSetDir(DAC1EN_PIN/32, DAC1EN_PIN%32, 1);
+
+	/* Wait for the QEI switch to exit */
+	while (!(button_pressed() &  ( 1 << QEI_SW_PIN)))
 	{
-		/*
-	    // Enable speaker or DAC GPIO
-		GPIOSetDir(DAC1EN_PIN/32, DAC1EN_PIN%32, 1);
-		LPC_GPIO_PORT->CLR0 = (1 << DAC1EN_PIN);
-		*/
+		/* If BUTTON_USER2 is pressed, toggle speaker/DACOUT */
+		if (button_pressed() &  ( 1 << BUTTON_USER2))
+		{
+		    // Toggle speaker or DAC GPIO output
+			LPC_GPIO_PORT->NOT0 = (1 << DAC1EN_PIN);
+		}
 
 		// Check for a scroll request on the QEI
         // Adjust the trigger level by default if any rotation occurs
