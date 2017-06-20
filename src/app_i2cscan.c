@@ -15,6 +15,7 @@
 
 #include "config.h"
 #include "button.h"
+#include "delay.h"
 #include "app_i2cscan.h"
 #include "gfx.h"
 
@@ -65,7 +66,12 @@ int app_i2cscan_check_addr(uint8_t addr)
     LPC_I2C0->MSTCTL = CTL_MSTSTART;                   // Start the transaction by setting the MSTSTART bit to 1 in the Master control register.
 
     // Wait for MSTPENDING bit to indicate that the request has been ACK'd
-    while(!(LPC_I2C0->STAT & STAT_MSTPEND));
+    uint8_t timeout = 0;
+    while(!(LPC_I2C0->STAT & STAT_MSTPEND) && (timeout < 3))
+    {
+    	delay_ms(1);
+    	timeout++;
+    }
 
     if((LPC_I2C0->STAT & MASTER_STATE_MASK) != I2C_STAT_MSTST_TX) {
     	// Error!
@@ -102,6 +108,7 @@ void app_i2cscan_run(void)
     {
 		ssd1306_fill_rect(105, 8, 12, 8, 0);
 	    gfx_printhex8(105, 8, addr, 1, 1);
+        ssd1306_refresh();
 
         /* Display the addr if a response was received */
         int rc = app_i2cscan_check_addr(addr);
@@ -111,8 +118,6 @@ void app_i2cscan_run(void)
             dev_count++;
 		    ssd1306_refresh();
         }
-
-        ssd1306_refresh();
     }
 
     if (dev_count < 10)

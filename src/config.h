@@ -51,6 +51,9 @@
 // Analog switch for DAC1 output to GPIO (L) or speaker (H)
 #define DAC1EN_PIN   (P0_18)
 
+// Analog in enable pin
+#define AN_IN_ENPIN  (P1_3)
+
 // All Buttons should be the same port (port 0)
 // Otherwise button.c need to be updated
 #define QEI_A_PIN    (P0_20)

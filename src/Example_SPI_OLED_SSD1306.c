@@ -58,6 +58,7 @@
  SCOPE/VOLTMETER ADC
  LPC    ARD   Description
  -----  ---   -----------
+ P1.3         Enable switch
  P0.14  A0    Analog Input (ADC2)
 
  I2C BUS SCANNER

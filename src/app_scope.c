@@ -30,6 +30,17 @@ void app_scope_init(app_scope_rate_t rate)
 	_app_scope_rate = rate;
 	adc_dma_set_rate(rate); // Set the ADC default sample rate in microseconds
 
+	// Setup the analog switch that controls the input
+	GPIOSetDir(AN_IN_ENPIN/32, AN_IN_ENPIN%32, 1);
+	if (AN_IN_ENPIN/32)
+	{
+		LPC_GPIO_PORT->SET1 = (1 << (AN_IN_ENPIN%32));
+	}
+	else
+	{
+		LPC_GPIO_PORT->SET0 = (1 << (AN_IN_ENPIN%32));
+	}
+
 	ssd1306_clear();
 
 	// Refresh the display

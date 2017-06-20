@@ -24,6 +24,17 @@ void app_vm_init(void)
 
 	ssd1306_clear();
 
+	// Setup the analog switch that controls the input
+	GPIOSetDir(AN_IN_ENPIN/32, AN_IN_ENPIN%32, 1);
+	if (AN_IN_ENPIN/32)
+	{
+		LPC_GPIO_PORT->SET1 = (1 << (AN_IN_ENPIN%32));
+	}
+	else
+	{
+		LPC_GPIO_PORT->SET0 = (1 << (AN_IN_ENPIN%32));
+	}
+
 	// Render the title bars
     ssd1306_set_text(0, 0, 1, "NXP SAKEE", 1);
     ssd1306_set_text(127-54, 0, 1, "VOLTMETER", 1);	// 54 pixels wide
