@@ -77,6 +77,7 @@
  LPC    ARD    Description
  -----  ---    -----------
  P0.17  A4     DAC0 Output
+ P0.23         Analog Input (ADC3)
 
  LEDS
  LPC    ARD   Description

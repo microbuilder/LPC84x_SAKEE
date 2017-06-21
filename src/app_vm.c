@@ -28,7 +28,7 @@ void app_vm_init(void)
 	GPIOSetDir(AN_IN_VREF_3_3V/32, AN_IN_VREF_3_3V%32, 1);				/* Straight 3.3V VRef */
 	GPIOSetDir(AN_IN_VREF_0_971V/32, AN_IN_VREF_0_971V%32, 1);			/* 240K + 100K */
 	GPIOSetDir(AN_IN_VREF_DISCON/32, AN_IN_VREF_DISCON%32, 1); 			/* No VREF (NC res) */
-	GPIOSetDir(AN_IN_VREF_2_598V/32, AN_IN_VREF_2_598V%32, 1); 			/* 2.598V VRef bypass */
+	GPIOSetDir(AN_IN_VDIV_0_787X/32, AN_IN_VDIV_0_787X%32, 1); 			/* 0.787X voltage divider bypass */
 	GPIOSetDir(AN_IN_2_2PF_BLOCKING/32, AN_IN_2_2PF_BLOCKING%32, 1); 	/* 2.pF inline blocking cap bypass */
 
 	// Enable 3.3V VRef
@@ -61,14 +61,14 @@ void app_vm_init(void)
 		LPC_GPIO_PORT->CLR0 = (1 << (AN_IN_VREF_DISCON%32));
 	}
 
-	// Skip 2.598V (27K+100K) Voltage Divider
-	if (AN_IN_VREF_2_598V/32)
+	// Skip 0.787X (27K+100K) Voltage Divider
+	if (AN_IN_VDIV_0_787X/32)
 	{
-		LPC_GPIO_PORT->SET1 = (1 << (AN_IN_VREF_2_598V%32));
+		LPC_GPIO_PORT->SET1 = (1 << (AN_IN_VDIV_0_787X%32));
 	}
 	else
 	{
-		LPC_GPIO_PORT->SET0 = (1 << (AN_IN_VREF_2_598V%32));
+		LPC_GPIO_PORT->SET0 = (1 << (AN_IN_VDIV_0_787X%32));
 	}
 
 	// Disable 2.2pF blocking cap

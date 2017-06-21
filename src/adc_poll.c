@@ -24,11 +24,15 @@
 
 int adc_poll_init(void)
 {
-	// This function configures ADC2 (P0_14) on the LPC845,
+	// Configures ADC2 (P0_14) on the LPC845,
 	// which corresponds to pin A0 on the Arduino headers.
 	// Configure the SWM (see utilities_lib and lpc8xx_swm.h)
-	LPC_SWM->PINENABLE0 &= ~(ADC_2);		// Enable ADC on P0_14
+	LPC_SWM->PINENABLE0 &= ~(ADC_2);		// Enable ADC2 on P0_14
 	LPC_IOCON->PIO0_14 = 1<<7;	 			// No pull-up/down
+
+	// Configures ADC3 (P0_23) on the LPC845
+	LPC_SWM->PINENABLE0 &= ~(ADC_3);		// Enable ADC3 on P0_23
+	LPC_IOCON->PIO0_23 = 1<<7;	 			// No pull-up/down
 
 	// ADC initialization
 	LPC_SYSCON->PDRUNCFG &= ~(ADC_PD);		// Power up the ADC

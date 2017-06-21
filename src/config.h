@@ -45,8 +45,8 @@
 
 #define MV_PER_LSB    (3300.0F / 0xFFF)
 
-// PIN config
-#define LED_PIN     (P0_0)
+// LED PIN config
+#define LED_PIN     (P0_0)	/* Blue */
 
 // Analog switch for DAC1 output to GPIO (L) or speaker (H)
 #define DAC1EN_PIN   (P0_18)
@@ -55,8 +55,8 @@
 #define AN_IN_VREF_3_3V      (P1_0) /* Straight 3.3V VRef */
 #define AN_IN_VREF_0_971V    (P1_1)	/* 240K + 100K */
 #define AN_IN_VREF_DISCON    (P1_2) /* No VREF (NC res) */
-#define AN_IN_VREF_2_598V    (P1_3)	/* 2.598V VRef bypass */
-#define AN_IN_2_2PF_BLOCKING (P1_4) /* 2.pF inline blocking cap bypass */
+#define AN_IN_VDIV_0_787X    (P1_3)	/* 0.787X voltage divider bypass */
+#define AN_IN_2_2PF_BLOCKING (P1_4) /* 2.2pF inline blocking cap bypass */
 
 // All Buttons should be the same port (port 0)
 // Otherwise button.c need to be updated
@@ -69,8 +69,8 @@
 #define BUTTON_USER1 (P0_13)
 #define BUTTON_USER2 (P0_7)
 
-#define ADC_CHANNEL (2) // Pin P0.14 (A0)
-#define WAVEGEN_DAC (1) // 0 = P0.17/ANALOG4, 1 = 0.29/ANALOG5
+#define ADC_CHANNEL  (2) // Pin P0.14 (A0)
+#define WAVEGEN_DAC  (1) // 0 = P0.17/ANALOG4, 1 = 0.29/ANALOG5
 
 // Common functions
 #define bit(_n)               ( 1 << (_n) )
