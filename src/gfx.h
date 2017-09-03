@@ -39,4 +39,6 @@ int gfx_graticule(uint8_t x, uint8_t y, gfx_graticule_cfg_t *cfg, uint8_t color)
 int gfx_printhex8(uint8_t x, uint8_t y, uint8_t hex, uint8_t scale, uint8_t color);
 int gfx_printdec(uint8_t x, uint8_t y, int32_t dec, uint8_t scale, uint8_t color);
 
+uint8_t gfx_num_digits(uint32_t x);
+
 #endif /* GFX_H_ */

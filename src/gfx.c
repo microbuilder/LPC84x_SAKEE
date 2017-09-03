@@ -334,7 +334,7 @@ static char gfx_dec1_to_char(uint8_t dec)
 }
 
 // Determines the number of digits in the specified number
-static uint8_t gfx_num_digits(uint32_t x)
+uint8_t gfx_num_digits(uint32_t x)
 {
     return (x < 10 ? 1 :
            (x < 100 ? 2 :
