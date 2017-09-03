@@ -32,6 +32,7 @@ typedef enum
 } app_wavegen_wave_t;
 
 static app_wavegen_wave_t _app_wavegen_curwave = APP_WAVEGEN_WAVE_SINE;
+static uint16_t _app_wavegen_frequency_hz = 500;
 
 static const uint16_t app_wavegen_sine_wave[64] = {
 	0x200, 0x232, 0x263, 0x294, 0x2c3, 0x2f1, 0x31c, 0x344,
@@ -218,28 +219,30 @@ void app_wavegen_render_setup(void)
   	  case APP_WAVEGEN_WAVE_LAST:
 	  case APP_WAVEGEN_WAVE_SINE:
 		  gfx_waveform_64_32_10bit(0, 16, 1, app_wavegen_sine_wave, 0, sizeof(app_wavegen_sine_wave) / 2, 0, 0);
-		  dac_wavegen_run(WAVEGEN_DAC, app_wavegen_sine_wave, sizeof(app_wavegen_sine_wave)/2, 500);
+		  dac_wavegen_run(WAVEGEN_DAC, app_wavegen_sine_wave, sizeof(app_wavegen_sine_wave)/2, _app_wavegen_frequency_hz);
 		  ssd1306_set_text(70, 16, 1, "WFRM SINE", 1);
 		  break;
 	  case APP_WAVEGEN_WAVE_TRIANGLE:
 		  gfx_waveform_64_32_10bit(0, 16, 1, app_wavegen_triangle_wave, 0, sizeof(app_wavegen_triangle_wave) / 2, 0, 0);
-		  dac_wavegen_run(WAVEGEN_DAC, app_wavegen_triangle_wave, sizeof(app_wavegen_triangle_wave)/2, 500);
+		  dac_wavegen_run(WAVEGEN_DAC, app_wavegen_triangle_wave, sizeof(app_wavegen_triangle_wave)/2, _app_wavegen_frequency_hz);
 		  ssd1306_set_text(70, 16, 1, "WFRM TRIA", 1);
 		  break;
 	  case APP_WAVEGEN_WAVE_EXPDECAY:
 		  gfx_waveform_64_32_10bit(0, 16, 1, app_wavegen_expdecay_wave, 0, sizeof(app_wavegen_expdecay_wave) / 2, 0, 0);
-		  dac_wavegen_run(WAVEGEN_DAC, app_wavegen_expdecay_wave, sizeof(app_wavegen_expdecay_wave)/2, 500);
+		  dac_wavegen_run(WAVEGEN_DAC, app_wavegen_expdecay_wave, sizeof(app_wavegen_expdecay_wave)/2, _app_wavegen_frequency_hz);
 		  ssd1306_set_text(70, 16, 1, "WFRM EXPO", 1);
 		  break;
 	  case APP_WAVEGEN_WAVE_USER:
 		  gfx_waveform_64_32_10bit(0, 16, 1, app_wavegen_user_wave, 0, sizeof(app_wavegen_user_wave) / 2, 0, 0);
-		  dac_wavegen_run(WAVEGEN_DAC, app_wavegen_user_wave, sizeof(app_wavegen_user_wave)/2, 500);
+		  dac_wavegen_run(WAVEGEN_DAC, app_wavegen_user_wave, sizeof(app_wavegen_user_wave)/2, _app_wavegen_frequency_hz);
 		  ssd1306_set_text(70, 16, 1, "WFRM USER", 1);
 		  break;
   }
 
   // Render some labels
-  ssd1306_set_text(70, 24, 1, "FREQ 500 Hz", 1);
+  ssd1306_set_text(70, 24, 1, "FREQ", 1); // 500 Hz", 1);
+  gfx_printdec(94, 24, _app_wavegen_frequency_hz, 1, 1);
+  ssd1306_set_text(94+(gfx_num_digits(_app_wavegen_frequency_hz)*6), 24, 1, "Hz", 1);
   ssd1306_set_text(70, 32, 1, "AMPL 3.3 V", 1);
 
   ssd1306_refresh();
@@ -258,7 +261,8 @@ void app_wavegen_run(void)
 
 	// Setup the analog switch that controls speaker/DACOUT
 	GPIOSetDir(DAC1EN_PIN/32, DAC1EN_PIN%32, 1);
-	LPC_GPIO_PORT->SET0 = (1 << DAC1EN_PIN);	// Default to speaker
+	//LPC_GPIO_PORT->SET0 = (1 << DAC1EN_PIN);	// Default to speaker
+	LPC_GPIO_PORT->CLR0 = (1 << DAC1EN_PIN);	// Default to pin out
 
 	// Wait for the QEI switch to exit
 	while (!(button_pressed() & (1 << QEI_SW_PIN)))
