@@ -8,6 +8,8 @@
 ===============================================================================
  */
 
+#include <string.h>
+
 #include "LPC8xx.h"
 #include "dac.h"
 #include "gpio.h"
@@ -25,6 +27,7 @@ typedef enum
 	APP_WAVEGEN_WAVE_SINE = 0,
 	APP_WAVEGEN_WAVE_TRIANGLE = 1,
 	APP_WAVEGEN_WAVE_EXPDECAY = 2,
+	APP_WAVEGEN_WAVE_USER = 3,
 	APP_WAVEGEN_WAVE_LAST
 } app_wavegen_wave_t;
 
@@ -63,6 +66,17 @@ static const uint16_t app_wavegen_expdecay_wave[64] = {
 	0x01f, 0x01d, 0x01b, 0x01a, 0x018, 0x017, 0x015, 0x014
 };
 
+static uint16_t app_wavegen_user_wave[64] = {
+	0x000, 0x000, 0x000, 0x000, 0x000, 0x000, 0x000, 0x000,
+	0x000, 0x000, 0x000, 0x000, 0x000, 0x000, 0x000, 0x000,
+	0x000, 0x000, 0x000, 0x000, 0x000, 0x000, 0x000, 0x000,
+	0x000, 0x000, 0x000, 0x000, 0x000, 0x000, 0x000, 0x000,
+	0x000, 0x000, 0x000, 0x000, 0x000, 0x000, 0x000, 0x000,
+	0x000, 0x000, 0x000, 0x000, 0x000, 0x000, 0x000, 0x000,
+	0x000, 0x000, 0x000, 0x000, 0x000, 0x000, 0x000, 0x000,
+	0x000, 0x000, 0x000, 0x000, 0x000, 0x000, 0x000, 0x000
+};
+
 void app_wavegen_init(void)
 {
   ssd1306_clear();
@@ -70,7 +84,106 @@ void app_wavegen_init(void)
   dac_wavegen_init(WAVEGEN_DAC);
 }
 
-void app_wavegen_render_setup()
+void app_wavegen_uart_help_msg(void)
+{
+	// Render a hint out to the UART port for new USER waveform
+	printf("WAVEGEN USER WAVEFORM UPLOAD:\n\r");
+	printf("- To update the USER waveform send 64 '\\r' separated 10-bit\n\r" \
+		   "  values in decimal format (0..4095\\r).\n\r" \
+		   "- An 'OK[<samplenum>=<value>]\\n\\r' string will be sent after each\n\r" \
+		   "  valid sample, and at the end of the sequence a 'DONE\\n\\r' message\n\r" \
+		   "  will be sent, and the user waveform will be persisted to EEPROM.\n\r" \
+		   "- 'ERROR: *\\n\\r' at any time indicates a failure.\n\r");
+}
+
+void app_wavegen_uart_read_waveform(void)
+{
+	char ch;
+	int i;
+	uint16_t count;
+
+	ch = i = count = 0;
+
+	app_wavegen_uart_help_msg();
+
+	while (count < 64)
+	{
+		// Display the input prompt
+		printf("> ");
+
+		// Wait for some numeric input or a carriage-return character
+		// This can be adjusted to wait for newline (\n), but minicom
+		// was used for development on an OS X system with the following
+		// parameters, which will default to sending '\r' for return:
+		//   $ minicom -D /dev/tty.usbmodem1422 -b 9600
+		while ((ch = getchar()) != '\r')
+		{
+			// Display help message on '?'
+			if (ch == '?')
+			{
+				app_wavegen_uart_help_msg();
+				return;
+			}
+			// Parse integers ... this will also eat any non numeric characters
+			if (ch <= '9' && ch >= '0')
+			{
+				i *= 10;
+				i += ch - '0';
+			}
+		}
+
+		// Ensure a 10-bit range
+		if (i > 1023)
+		{
+			printf("ERROR: Numeric overflow\n\r");
+			app_wavegen_uart_help_msg();
+			return;
+		}
+
+		// Add the new value to the user waveform
+		app_wavegen_user_wave[count] = (uint16_t)i;
+		printf("OK[%d=%d]\n\r", count+1, i);
+
+		// Reset the integer placeholder
+		i = 0;
+
+		if (count == 63)
+		{
+			// ToDo: Persist user waveform to EEPROM!
+			printf("DONE\n\r");
+		}
+
+		// Increment the counter
+		count++;
+	}
+}
+
+void app_wavegen_render_upload(void)
+{
+	ssd1306_clear();
+
+	// Render the title bars
+	ssd1306_set_text(0, 0, 1, "NXP SAKEE", 1);
+	ssd1306_set_text(127 - 60, 0, 1, "DAC WAVEGEN", 1);
+
+	// Help Text
+    ssd1306_set_text(0, 12, 1, "OPEN USB SERIAL AT 9600", 1);
+    ssd1306_set_text(0, 20, 1, "8N1 AND SEND 64 10-BIT", 1);
+    ssd1306_set_text(0, 28, 1, "SAMPLES USING DECIMAL", 1);
+    ssd1306_set_text(0, 36, 1, "VALUES (0..4095).", 1);
+
+	// Render the bottom button options
+	ssd1306_fill_rect(0, 55, 31, 8, 1);
+	ssd1306_fill_rect(32, 55, 31, 8, 1);
+	ssd1306_fill_rect(64, 55, 31, 8, 1);
+	ssd1306_fill_rect(96, 55, 32, 8, 1);
+	ssd1306_set_text(101, 56, 0, "EXIT", 1);
+
+	// Display the screen contents
+	ssd1306_refresh();
+}
+
+void app_wavegen_render_setup(void)
 {
   gfx_graticule_cfg_t grcfg =
   {
@@ -118,6 +231,11 @@ void app_wavegen_render_setup()
 		  dac_wavegen_run(WAVEGEN_DAC, app_wavegen_expdecay_wave, sizeof(app_wavegen_expdecay_wave)/2, 500);
 		  ssd1306_set_text(70, 16, 1, "WFRM EXPO", 1);
 		  break;
+	  case APP_WAVEGEN_WAVE_USER:
+		  gfx_waveform_64_32_10bit(0, 16, 1, app_wavegen_user_wave, 0, sizeof(app_wavegen_user_wave) / 2, 0, 0);
+		  dac_wavegen_run(WAVEGEN_DAC, app_wavegen_user_wave, sizeof(app_wavegen_user_wave)/2, 500);
+		  ssd1306_set_text(70, 16, 1, "WFRM USER", 1);
+		  break;
   }
 
   // Render some labels
@@ -129,6 +247,9 @@ void app_wavegen_render_setup()
 
 void app_wavegen_run(void)
 {
+	//app_wavegen_render_upload();
+	//app_wavegen_uart_read_waveform();
+
 	app_wavegen_render_setup();
 
 	// Reset the QEI encoder position counter
@@ -139,10 +260,10 @@ void app_wavegen_run(void)
 	GPIOSetDir(DAC1EN_PIN/32, DAC1EN_PIN%32, 1);
 	LPC_GPIO_PORT->SET0 = (1 << DAC1EN_PIN);	// Default to speaker
 
-	/* Wait for the QEI switch to exit */
+	// Wait for the QEI switch to exit
 	while (!(button_pressed() & (1 << QEI_SW_PIN)))
 	{
-		/* If BUTTON_USER2 is pressed, toggle speaker/DACOUT */
+		// If BUTTON_USER2 is pressed, toggle speaker/DACOUT
 		if (button_pressed() &  ( 1 << BUTTON_USER2))
 		{
 		    // Toggle speaker or DAC GPIO output
@@ -157,13 +278,13 @@ void app_wavegen_run(void)
 		{
 			int16_t pos = (int16_t)_app_wavegen_curwave;
 			pos += (abs - last_position_qei);
-			if (pos > APP_WAVEGEN_WAVE_EXPDECAY)
+			if (pos >= APP_WAVEGEN_WAVE_LAST)
 			{
 				pos = APP_WAVEGEN_WAVE_SINE;
 			}
 			if (pos < 0)
 			{
-				pos = APP_WAVEGEN_WAVE_EXPDECAY;
+				pos = APP_WAVEGEN_WAVE_USER;
 			}
 			_app_wavegen_curwave = (app_wavegen_wave_t)pos;
 			app_wavegen_render_setup();

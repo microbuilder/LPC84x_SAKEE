@@ -4,7 +4,7 @@
 //
 // The following parameters need to be defined for each project's inital clock setup (used in system.c))
 // 
-#define FRO_FREQ_VAL 2             // 0 = 18 MHz
+#define FRO_FREQ_VAL 0             // 0 = 12 MHz
                                    // 1 = 24 MHz (reset value)
                                    // 2 = 30 MHz
 
@@ -97,14 +97,14 @@
 //
 #define DBGUART 0                  // Choose the index for the debug UART (0 for UART0, 1 for UART1, etc.)
 #define DBGBAUDRATE 9600           // Choose the baud rate for the debug UART
-#define USE_MBED_PORT 1            // '1' to use MBED serial port, '0' to use user-defined port pins for debug UART
+#define USE_MBED_PORT 0            // '1' to use MBED serial port, '0' to use user-defined port pins for debug UART
 
 #if (USE_MBED_PORT == 1)
   #define DBGTXPIN TARGET_TX       // For MBED serial port (see board.h)
   #define DBGRXPIN TARGET_RX       // For MBED serial port (see board.h)
 #else
-  #define DBGTXPIN P0_4            // Use with USB-to-RS232 break-out cable (choose your own favorite TxD pin)
-  #define DBGRXPIN P0_0            // Use with USB-to-RS232 break-out cable (choose your own favorite RxD pin)
+  #define DBGTXPIN P0_25           // Use with USB-to-RS232 break-out cable (choose your own favorite TxD pin)
+  #define DBGRXPIN P0_24           // Use with USB-to-RS232 break-out cable (choose your own favorite RxD pin)
 #endif
 
 //

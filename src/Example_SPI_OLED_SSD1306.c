@@ -68,22 +68,30 @@
  P0.11  D14   I2C0 SDA
 
  WAVEGEN DAC OUTPUT
- LPC    ARD    Description
- -----  ---    -----------
- P0.18         DAC1 Enable (Analog Switch)
- P0.29  A5     DAC1 Output
+ LPC    ARD   Description
+ -----  ---   -----------
+ P0.18        DAC1 Enable (Analog Switch)
+ P0.29  A5    DAC1 Output
 
  CONTINUITY TESTER
- LPC    ARD    Description
- -----  ---    -----------
- P0.17  A4     DAC0 Output
- P0.23         Analog Input (ADC3)
+ LPC    ARD   Description
+ -----  ---   -----------
+ P0.17  A4    DAC0 Output
+ P0.23        Analog Input (ADC3)
 
  LEDS
  LPC    ARD   Description
  -----  ---   -----------
- P0.0  	--	  Debug LED (BLUE)
+ P0.0  	  	  Debug LED (BLUE)
+
+ UART (MBED Interface)
+ LPC    ARD   Description
+ -----  ---   -----------
+ P0.24        DEBUG UART RX
+ P0.25        DEBUG UART TX
 */
+
+void setup_debug_uart(void);	// Serial.c
 
 void led_on(void)
 {
@@ -100,8 +108,11 @@ int main(void)
 	SystemCoreClockUpdate();
 
 	// Initialize the delay timer (systick) with 1ms intervals
-	// use systick to trigger ADC, enable later when using other hw timer
 	delay_init(12000000 / 1000);
+
+	// UART init (see Serial.c)
+	setup_debug_uart();
+	printf("NXP SAKEE\n\r");
 
 	// Reset and enable the GPIO module (peripherals_lib)
 	GPIOInit();
@@ -110,10 +121,10 @@ int main(void)
 	GPIOSetDir(LED_PIN/32, LED_PIN%32, 1);
 	led_off();
 
-	// Initialize the QEI switch
+	// Initialize the QEI switch pin and and other input buttons
 	button_init();
 
-	// Initialize the SCT based quadrature decoder
+	// Initialize the quadrature decoder
 	qei_init();
 
 	// Initialize the SSD1306 display

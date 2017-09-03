@@ -72,6 +72,11 @@
 #define ADC_CHANNEL  (2) // Pin P0.14 (A0)
 #define WAVEGEN_DAC  (1) // 0 = P0.17/ANALOG4, 1 = 0.29/ANALOG5
 
+// NOTE: USB Serial pins are defined in chip_setup.h
+// USB Serial is routed through the MBED USB CDC interface using:
+//   TXD = P0_25
+//   RXD = P0_24
+
 // Common functions
 #define bit(_n)               ( 1 << (_n) )
 #define bit_test(_x, _n)      ( ((_x) & bit(_n)) ? 1 : 0 )
