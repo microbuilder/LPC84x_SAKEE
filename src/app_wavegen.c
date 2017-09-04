@@ -195,7 +195,7 @@ void app_wavegen_render_setup(void)
       .block_spacing = 8	// Each block is 8x8 pixels
   };
 
-  ssd1306_init();
+  //ssd1306_init();
   ssd1306_clear();
 
   // Render the title bars
