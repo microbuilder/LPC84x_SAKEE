@@ -19,9 +19,13 @@
 #include "gfx.h"
 #include "app_scope.h"
 
+#define APP_SCOPE_WAVEFORM_RENDER_AS_BAR	(0)	// Set this to 1 to render waveform with solid bars from bottom to sample height
+
 app_scope_rate_t _app_scope_rate;
 uint16_t         _app_scope_thresh_l = (uint16_t)(1001/MV_PER_LSB); // Default lower threshold in lsb
 uint16_t         _app_scope_thresh_h = (uint16_t)(1100/MV_PER_LSB); // Default upper threshold in lsb
+uint8_t          _app_scope_coupling = 0;		// 0 = DC, 1 = AC (default = DC)
+uint8_t          _app_scope_vdiv = 0;           // 0 = No input divider, 1 = Enable the 0.787X voltage divider
 
 void app_scope_init(app_scope_rate_t rate)
 {
@@ -33,9 +37,10 @@ void app_scope_init(app_scope_rate_t rate)
 	// Analog front end setup
 	GPIOSetDir(AN_IN_VREF_3_3V_0_971V/32, AN_IN_VREF_3_3V_0_971V%32, 1); /* 3.3V or 0.971V VRef (240K + 100K divider) */
 	GPIOSetDir(AN_IN_VDIV_0_787X/32, AN_IN_VDIV_0_787X%32, 1); 			 /* 0.787X voltage divider bypass */
-	GPIOSetDir(AN_IN_2_2PF_BLOCKING/32, AN_IN_2_2PF_BLOCKING%32, 1); 	 /* 2.2pF inline AC/DC blocking cap bypass */
+	GPIOSetDir(AN_IN_220NF_BLOCKING/32, AN_IN_220NF_BLOCKING%32, 1); 	 /* 220nF inline AC/DC blocking cap bypass */
 
-	// Disable 0.971V VRef (3.3V by default)
+	// Toggle 0.971V VRef (3.3V by default)
+	// Note: This MUST be 3.3V since the minimum VREFP on the LPC845 is 2.4V
 	if (AN_IN_VREF_3_3V_0_971V/32)
 	{
 		LPC_GPIO_PORT->SET1 = (1 << (AN_IN_VREF_3_3V_0_971V%32));
@@ -45,24 +50,60 @@ void app_scope_init(app_scope_rate_t rate)
 		LPC_GPIO_PORT->SET0 = (1 << (AN_IN_VREF_3_3V_0_971V%32));
 	}
 
-	// Disable 0.787X (27K+100K) Voltage Divider (Full 3.3V input range by default)
+	// Toggle 0.787X (27K+100K) Voltage Divider (Full 3.3V input range by default)
 	if (AN_IN_VDIV_0_787X/32)
 	{
-		LPC_GPIO_PORT->SET1 = (1 << (AN_IN_VDIV_0_787X%32));
+		if (_app_scope_vdiv)
+		{
+			// Enable the 0.787x voltage divider
+			LPC_GPIO_PORT->CLR1 = (1 << (AN_IN_VDIV_0_787X%32));
+		}
+		else
+		{
+			// No voltage divider
+			LPC_GPIO_PORT->SET1 = (1 << (AN_IN_VDIV_0_787X%32));
+		}
 	}
 	else
 	{
-		LPC_GPIO_PORT->SET0 = (1 << (AN_IN_VDIV_0_787X%32));
+		if (_app_scope_vdiv)
+		{
+			// Enable the 0.787x voltage divider
+			LPC_GPIO_PORT->CLR0 = (1 << (AN_IN_VDIV_0_787X%32));
+		}
+		else
+		{
+			// No voltage divider
+			LPC_GPIO_PORT->SET0 = (1 << (AN_IN_VDIV_0_787X%32));
+		}
 	}
 
-	// Disable 2.2pF AC/DC blocking cap (DC coupling by default)
-	if (AN_IN_2_2PF_BLOCKING/32)
+	// Toggle 220nF AC/DC blocking cap (DC coupling by default)
+	if (AN_IN_220NF_BLOCKING/32)
 	{
-		LPC_GPIO_PORT->SET1 = (1 << (AN_IN_2_2PF_BLOCKING%32));
+		if (_app_scope_coupling)
+		{
+			// AC coupling
+			LPC_GPIO_PORT->CLR1 = (1 << (AN_IN_220NF_BLOCKING%32));
+		}
+		else
+		{
+			// DC coupling
+			LPC_GPIO_PORT->SET1 = (1 << (AN_IN_220NF_BLOCKING%32));
+		}
 	}
 	else
 	{
-		LPC_GPIO_PORT->SET0 = (1 << (AN_IN_2_2PF_BLOCKING%32));
+		if (_app_scope_coupling)
+		{
+			// AC coupling
+			LPC_GPIO_PORT->CLR0 = (1 << (AN_IN_220NF_BLOCKING%32));
+		}
+		else
+		{
+			// DC coupling
+			LPC_GPIO_PORT->SET0 = (1 << (AN_IN_220NF_BLOCKING%32));
+		}
 	}
 
 	ssd1306_clear();
@@ -88,12 +129,15 @@ void app_scope_render_waveform(int16_t sample, int32_t offset_us)
 	ssd1306_set_text(0, 0, 1, "NXP SAKEE", 1);
 	ssd1306_set_text(127 - 48, 0, 1, "WAVEFORM", 1);	// 48 pixels wide
 
+	// Render AD/DC coupling indicator
+	ssd1306_set_text(127-18, 8, 1, _app_scope_coupling ? "AC" : "DC", 1);
+
 	// Render the graticule and waveform
 	gfx_graticule(0, 16, &grcfg, 1);
 	// Make sure we have at least 32 samples before the trigger, or start at 0 if less
 	uint16_t start = sample >= 32 ? sample - 32 : 0;
 	// ToDo: Check for overflow in adc_buffer
-	gfx_waveform_64_32(0, 16, 1, adc_dma_get_buffer(), start, 2048, 4, 1);
+	gfx_waveform_64_32(0, 16, 1, adc_dma_get_buffer(), start, 2048, 4, APP_SCOPE_WAVEFORM_RENDER_AS_BAR);
 
 	uint8_t meas_x = sample >= 32 ? 32 : sample;
 
