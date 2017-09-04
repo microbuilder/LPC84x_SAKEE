@@ -19,6 +19,12 @@
 #include "utilities.h"
 #include "delay.h"
 
+// Note: The NXP SAKEE board uses a 4-wire SPI interface by default
+// BS0, BS1 and BS2 = GND
+// In this mode:
+// CMD  = D/C: HIGH
+// DATA = D/C: LOW
+
 #define SSD1306_DCPIN	(P0_1)	    // D7 	--> OLED Data/Command (was P0_17)
 #define SSD1306_RSTPIN	(P0_16)	    // D8	--> OLED Reset (was P0_13)
 #define SSD1306_SSELPIN (P1_18)	    // D10	--> OLED CS (was P0_15)
@@ -39,6 +45,22 @@ ssd1306_command(uint8_t cmd)
     LPC_SPI1->TXCTL &= ~(CTL_EOT);                      // Start a new transfer, clear the EOT bit
     while ((LPC_SPI1->STAT & STAT_TXRDY) == 0);  	    // Wait for master TXRDY
     LPC_SPI1->TXDAT = cmd;                       	    // Write the cmd byte to the master's TXDAT register, start the frame
+    //LPC_SPI1->TXCTL |= CTL_EOT;
+	LPC_GPIO_PORT->SET1 = (1 << (SSD1306_SSELPIN%32));	// CS HIGH
+
+	return 0;
+}
+
+static int
+ssd1306_data(uint8_t data)
+{
+	LPC_GPIO_PORT->SET1 = (1 << (SSD1306_SSELPIN%32));	// CS HIGH
+	LPC_GPIO_PORT->SET0 = (1 << SSD1306_DCPIN%32);		// DC HIGH = Data
+	LPC_GPIO_PORT->CLR1 = (1 << (SSD1306_SSELPIN%32));	// CS LOW = Assert
+    LPC_SPI1->TXCTL &= ~(CTL_EOT);                      // Start a new transfer, clear the EOT bit
+    while ((LPC_SPI1->STAT & STAT_TXRDY) == 0);  	    // Wait for master TXRDY
+    LPC_SPI1->TXDAT = data;                       	    // Write the data byte to the master's TXDAT register, start the frame
+    while ((LPC_SPI1->STAT & STAT_TXRDY) == 0);	        // Wait for master TXRDY
     //LPC_SPI1->TXCTL |= CTL_EOT;
 	LPC_GPIO_PORT->SET1 = (1 << (SSD1306_SSELPIN%32));	// CS HIGH
 
@@ -99,7 +121,7 @@ ssd1306_pin_setup(void)
 
 	// Configure the SPI control register
 	// Master: End-of-frame true, End-of-transfer true, RXIGNORE true, LEN 8 bits.
-	LPC_SPI1->TXCTL = CTL_EOF | CTL_RXIGNORE | CTL_LEN(8); // Removed CTL_EOT!
+	LPC_SPI1->TXCTL = CTL_EOF  | CTL_EOT | CTL_RXIGNORE | CTL_LEN(8);
 
 	return 0;
 }
@@ -107,6 +129,8 @@ ssd1306_pin_setup(void)
 static int
 ssd1306_config_display()
 {
+	ssd1306_reset();
+
 	// Turn the OLED Display off
 	ssd1306_command(SSD1306_DISPLAYOFF);
 
@@ -227,20 +251,13 @@ ssd1306_refresh(void)
 {
 	uint16_t i;
 
-	ssd1306_command(SSD1306_SETSTARTLINE | 0);
-
-	// Dump the buffer to the display driver
-	LPC_GPIO_PORT->SET1 = (1 << (SSD1306_SSELPIN%32));	// Deassert CS
-	LPC_GPIO_PORT->SET0 = (1 << SSD1306_DCPIN%32);		// DC High = Data
-	LPC_GPIO_PORT->CLR1 = (1 << (SSD1306_SSELPIN%32));	// Assert CS
+	ssd1306_command(0xb0);
+	ssd1306_command(((0&0xf0)>>4)|0x10);
+	ssd1306_command((0&0x0f)|0x01);
 
     for (i=0; i<sizeof(buffer)-1; i++) {
-        while ((LPC_SPI1->STAT & STAT_TXRDY) == 0);	// Wait for master TXRDY
-        LPC_SPI1->TXDAT = buffer[i];				// Write the cmd byte to the master's TXDAT register
+    	ssd1306_data(buffer[i]);
     }
-	LPC_GPIO_PORT->SET1 = (1 << (SSD1306_SSELPIN%32));	// Deassert CS
-
-	delay_ms(10);
 
 	return 0;
 }
