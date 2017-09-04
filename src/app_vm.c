@@ -18,6 +18,9 @@
 #include "gfx.h"
 #include "app_vm.h"
 
+uint8_t          _app_vm_coupling = 0;		// 0 = DC, 1 = AC (default = DC)
+uint8_t          _app_vm_vdiv = 0;          // 0 = No input divider, 1 = Enable the 0.787X voltage divider
+
 void app_vm_init(void)
 {
 	adc_poll_init();
@@ -27,9 +30,10 @@ void app_vm_init(void)
 	// Analog front end setup
 	GPIOSetDir(AN_IN_VREF_3_3V_0_971V/32, AN_IN_VREF_3_3V_0_971V%32, 1); /* 3.3V or 0.971V VRef (240K + 100K divider) */
 	GPIOSetDir(AN_IN_VDIV_0_787X/32, AN_IN_VDIV_0_787X%32, 1); 			 /* 0.787X voltage divider bypass */
-	GPIOSetDir(AN_IN_2_2PF_BLOCKING/32, AN_IN_2_2PF_BLOCKING%32, 1); 	 /* 2.2pF inline AC/DC blocking cap bypass */
+	GPIOSetDir(AN_IN_220NF_BLOCKING/32, AN_IN_220NF_BLOCKING%32, 1); 	 /* 220nF inline AC/DC blocking cap bypass */
 
-	// Disable 0.971V VRef (3.3V by default)
+	// Toggle 0.971V VRef (3.3V by default)
+	// Note: This MUST be 3.3V since the minimum VREFP on the LPC845 is 2.4V
 	if (AN_IN_VREF_3_3V_0_971V/32)
 	{
 		LPC_GPIO_PORT->SET1 = (1 << (AN_IN_VREF_3_3V_0_971V%32));
@@ -39,29 +43,68 @@ void app_vm_init(void)
 		LPC_GPIO_PORT->SET0 = (1 << (AN_IN_VREF_3_3V_0_971V%32));
 	}
 
-	// Disable 0.787X (27K+100K) Voltage Divider (Full 3.3V input range by default)
+	// Toggle 0.787X (27K+100K) Voltage Divider (Full 3.3V input range by default)
 	if (AN_IN_VDIV_0_787X/32)
 	{
-		LPC_GPIO_PORT->SET1 = (1 << (AN_IN_VDIV_0_787X%32));
+		if (_app_vm_vdiv)
+		{
+			// Enable the 0.787x voltage divider
+			LPC_GPIO_PORT->CLR1 = (1 << (AN_IN_VDIV_0_787X%32));
+		}
+		else
+		{
+			// No voltage divider
+			LPC_GPIO_PORT->SET1 = (1 << (AN_IN_VDIV_0_787X%32));
+		}
 	}
 	else
 	{
-		LPC_GPIO_PORT->SET0 = (1 << (AN_IN_VDIV_0_787X%32));
+		if (_app_vm_vdiv)
+		{
+			// Enable the 0.787x voltage divider
+			LPC_GPIO_PORT->CLR0 = (1 << (AN_IN_VDIV_0_787X%32));
+		}
+		else
+		{
+			// No voltage divider
+			LPC_GPIO_PORT->SET0 = (1 << (AN_IN_VDIV_0_787X%32));
+		}
 	}
 
-	// Disable 2.2pF AC/DC blocking cap (DC coupling by default)
-	if (AN_IN_2_2PF_BLOCKING/32)
+	// Toggle 220nF AC/DC blocking cap (DC coupling by default)
+	if (AN_IN_220NF_BLOCKING/32)
 	{
-		LPC_GPIO_PORT->SET1 = (1 << (AN_IN_2_2PF_BLOCKING%32));
+		if (_app_vm_coupling)
+		{
+			// AC coupling
+			LPC_GPIO_PORT->CLR1 = (1 << (AN_IN_220NF_BLOCKING%32));
+		}
+		else
+		{
+			// DC coupling
+			LPC_GPIO_PORT->SET1 = (1 << (AN_IN_220NF_BLOCKING%32));
+		}
 	}
 	else
 	{
-		LPC_GPIO_PORT->SET0 = (1 << (AN_IN_2_2PF_BLOCKING%32));
+		if (_app_vm_coupling)
+		{
+			// AC coupling
+			LPC_GPIO_PORT->CLR0 = (1 << (AN_IN_220NF_BLOCKING%32));
+		}
+		else
+		{
+			// DC coupling
+			LPC_GPIO_PORT->SET0 = (1 << (AN_IN_220NF_BLOCKING%32));
+		}
 	}
 
 	// Render the title bars
     ssd1306_set_text(0, 0, 1, "NXP SAKEE", 1);
     ssd1306_set_text(127-54, 0, 1, "VOLTMETER", 1);	// 54 pixels wide
+
+	// Render AD/DC coupling indicator
+	ssd1306_set_text(127-18, 8, 1, _app_vm_coupling ? "AC" : "DC", 1);
 
     ssd1306_set_text(90, 32, 1, "mVOLTS", 1);
 
@@ -80,7 +123,7 @@ void app_vm_init(void)
 void app_vm_run(void)
 {
 	/* Wait for the QEI switch to exit */
-	while (!(button_pressed() &  ( 1 << QEI_SW_PIN)))
+	while (!(button_pressed() & (1 << QEI_SW_PIN)))
 	{
 		uint16_t v = adc_poll_read(ADC_CHANNEL);
 	    ssd1306_fill_rect(20, 20, 64, 24, 0);
