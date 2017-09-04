@@ -58,8 +58,8 @@
  SCOPE/VOLTMETER ADC
  LPC    ARD   Description
  -----  ---   -----------
- P1.1         AC/DC coupling selection (2.2pF inline blocking cap)
- P1.2         0.787X voltage divider enable
+ P1.1         AC/DC coupling selection (220nF inline blocking cap)
+ P1.2         0.787X voltage divider enable (27K+100K)
  P1.3         3.3V or 0.971V VRef selection (240K+100K divider)
  P0.14  A0    Analog Input (ADC2)
 
