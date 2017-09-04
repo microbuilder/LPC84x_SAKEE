@@ -43,7 +43,7 @@
 
 #include "swm.h"
 
-#define MV_PER_LSB    (3300.0F / 0xFFF)
+#define MV_PER_LSB    		(3300.0F / 0xFFF)	// 3.3V VREF
 
 // LED PIN config
 #define LED_PIN     (P0_0)	/* Blue */
@@ -52,7 +52,7 @@
 #define DAC1EN_PIN   (P0_18)
 
 // Analog in enable pin
-#define AN_IN_2_2PF_BLOCKING      (P1_1)    /* 2.2pF inline AC/DC blocking cap */
+#define AN_IN_220NF_BLOCKING      (P1_1)    /* 220nF inline AC/DC blocking cap */
 #define AN_IN_VDIV_0_787X         (P1_2)	/* 0.787X voltage divider */
 #define AN_IN_VREF_3_3V_0_971V    (P1_3)    /* 3.3V or 0.971V Vref (240K + 100K) */
 
