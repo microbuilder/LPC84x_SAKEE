@@ -22,6 +22,12 @@
 #include "app_wavegen.h"
 #include "dac_wavegen.h"
 
+// Note that the DAC is limited to approx. VDD-1.5V, so
+// on a 3.3V system DAC input values should be restricted
+// to a 0-1.8V range (0..558) since:
+// 3300mV / 1024 = 3.22265625mV per lsb
+#define APP_WAVEGEN_MAX_DAC_INPUT	(558)
+
 typedef enum
 {
 	APP_WAVEGEN_WAVE_SINE = 0,
@@ -35,36 +41,36 @@ static app_wavegen_wave_t _app_wavegen_curwave = APP_WAVEGEN_WAVE_SINE;
 static uint16_t _app_wavegen_frequency_hz = 500;
 
 static const uint16_t app_wavegen_sine_wave[64] = {
-	0x200, 0x232, 0x263, 0x294, 0x2c3, 0x2f1, 0x31c, 0x344,
-	0x369, 0x38b, 0x3a9, 0x3c3, 0x3d8, 0x3e9, 0x3f5, 0x3fd,
-	0x3ff, 0x3fd, 0x3f5, 0x3e9, 0x3d8, 0x3c3, 0x3a9, 0x38b,
-	0x369, 0x344, 0x31c, 0x2f1, 0x2c3, 0x294, 0x263, 0x232,
-	0x200, 0x1cd, 0x19c, 0x16b, 0x13c, 0x10e, 0x0e3, 0x0bb,
-	0x096, 0x074, 0x056, 0x03c, 0x027, 0x016, 0x00a, 0x002,
-	0x000, 0x002, 0x00a, 0x016, 0x027, 0x03c, 0x056, 0x074,
-	0x096, 0x0bb, 0x0e3, 0x10e, 0x13c, 0x16b, 0x19c, 0x1cd
+	279, 306, 333, 360, 386, 411, 434, 456,
+	476, 495, 511, 525, 537, 546, 553, 557,
+	558, 557, 553, 546, 537, 525, 511, 495,
+	476, 456, 434, 411, 386, 360, 333, 306,
+	279, 252, 225, 198, 172, 147, 124, 102,
+	 82,  63,  47,  33,  21,  12,   5,   1,
+	   0,   1,   5,  12,  21,  33,  47,  63,
+	  82, 102, 124, 147, 172, 198, 225, 252
 };
 
 static const uint16_t app_wavegen_triangle_wave[64] = {
-	0x020, 0x040, 0x060, 0x080, 0x0a0, 0x0c0, 0x0e0, 0x100,
-	0x120, 0x140, 0x160, 0x180, 0x1a0, 0x1c0, 0x1e0, 0x200,
-	0x21f, 0x23f, 0x25f, 0x27f, 0x29f, 0x2bf, 0x2df, 0x2ff,
-	0x31f, 0x33f, 0x35f, 0x37f, 0x39f, 0x3bf, 0x3df, 0x3ff,
-	0x3df, 0x3bf, 0x39f, 0x37f, 0x35f, 0x33f, 0x31f, 0x2ff,
-	0x2df, 0x2bf, 0x29f, 0x27f, 0x25f, 0x23f, 0x21f, 0x200,
-	0x1e0, 0x1c0, 0x1a0, 0x180, 0x160, 0x140, 0x120, 0x100,
-	0x0e0, 0x0c0, 0x0a0, 0x080, 0x060, 0x040, 0x020, 0x000
+	  17,  35,  52,  70,  87, 105, 122, 140,
+	 157, 174, 192, 209, 227, 244, 262, 279,
+	 296, 314, 331, 349, 366, 384, 401, 419,
+	 436, 453, 471, 488, 506, 523, 541, 558,
+	 541, 523, 506, 488, 471, 453, 436, 419,
+	 401, 384, 366, 349, 331, 314, 296, 279,
+	 262, 244, 227, 209, 192, 174, 157, 140,
+	 122, 105,  87,  70,  52,  35,  17,   0
 };
 
 static const uint16_t app_wavegen_expdecay_wave[64] = {
-	0x3ff, 0x3c1, 0x387, 0x350, 0x31d, 0x2ec, 0x2bf, 0x294,
-	0x26c, 0x247, 0x224, 0x202, 0x1e3, 0x1c6, 0x1aa, 0x191,
-	0x178, 0x162, 0x14c, 0x138, 0x125, 0x113, 0x103, 0x0f3,
-	0x0e4, 0x0d6, 0x0c9, 0x0bd, 0x0b2, 0x0a7, 0x09d, 0x093,
-	0x08a, 0x082, 0x07a, 0x073, 0x06c, 0x065, 0x05f, 0x059,
-	0x054, 0x04f, 0x04a, 0x046, 0x041, 0x03d, 0x03a, 0x036,
-	0x033, 0x030, 0x02d, 0x02a, 0x028, 0x025, 0x023, 0x021,
-	0x01f, 0x01d, 0x01b, 0x01a, 0x018, 0x017, 0x015, 0x014
+	   0,  34,  66,  95, 123, 150, 174, 198,
+	 220, 240, 259, 277, 294, 310, 325, 339,
+	 353, 365, 377, 388, 398, 408, 417, 425,
+	 433, 441, 448, 455, 461, 467, 472, 478,
+	 482, 487, 491, 495, 499, 503, 506, 509,
+	 512, 515, 518, 520, 522, 524, 527, 528,
+	 530, 532, 533, 535, 536, 538, 539, 540,
+	 541, 542, 543, 544, 545, 546, 546, 547
 };
 
 static uint16_t app_wavegen_user_wave[64] = {
@@ -90,7 +96,7 @@ void app_wavegen_uart_help_msg(void)
 	// Render a hint out to the UART port for new USER waveform
 	printf("WAVEGEN USER WAVEFORM UPLOAD:\n\r");
 	printf("- To update the USER waveform send 64 '\\r' separated 10-bit\n\r" \
-		   "  values in decimal format (0..4095\\r).\n\r" \
+		   "  values in decimal format (0..1023\\r).\n\r" \
 		   "- An 'OK[<samplenum>=<value>]\\n\\r' string will be sent after each\n\r" \
 		   "  valid sample, and at the end of the sequence a 'DONE\\n\\r' message\n\r" \
 		   "  will be sent, and the user waveform will be persisted to EEPROM.\n\r" \
@@ -140,6 +146,12 @@ void app_wavegen_uart_read_waveform(void)
 			app_wavegen_uart_help_msg();
 			return;
 		}
+		// VDD-1.5V restriction warning
+		if (i > APP_WAVEGEN_MAX_DAC_INPUT)
+		{
+			printf("WARNING: 1.8V limit exceeeded, trimming value to %d", APP_WAVEGEN_MAX_DAC_INPUT);
+			i = APP_WAVEGEN_MAX_DAC_INPUT;
+		}
 
 		// Add the new value to the user waveform
 		app_wavegen_user_wave[count] = (uint16_t)i;
@@ -171,7 +183,7 @@ void app_wavegen_render_upload(void)
     ssd1306_set_text(0, 12, 1, "OPEN USB SERIAL AT 9600", 1);
     ssd1306_set_text(0, 20, 1, "8N1 AND SEND 64 10-BIT", 1);
     ssd1306_set_text(0, 28, 1, "SAMPLES USING DECIMAL", 1);
-    ssd1306_set_text(0, 36, 1, "VALUES (0..4095).", 1);
+    ssd1306_set_text(0, 36, 1, "VALUES (0..1023).", 1);
 
 	// Render the bottom button options
 	ssd1306_fill_rect(0, 55, 31, 8, 1);
@@ -243,7 +255,7 @@ void app_wavegen_render_setup(void)
   ssd1306_set_text(70, 24, 1, "FREQ", 1); // 500 Hz", 1);
   gfx_printdec(94, 24, _app_wavegen_frequency_hz, 1, 1);
   ssd1306_set_text(94+(gfx_num_digits(_app_wavegen_frequency_hz)*6), 24, 1, "Hz", 1);
-  ssd1306_set_text(70, 32, 1, "AMPL 3.3 V", 1);
+  ssd1306_set_text(70, 32, 1, "AMPL 1.8 V", 1);
 
   ssd1306_refresh();
 }
