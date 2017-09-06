@@ -132,6 +132,12 @@ void app_scope_render_waveform(int16_t sample, int32_t offset_us)
 	// Render AD/DC coupling indicator
 	ssd1306_set_text(127-18, 8, 1, _app_scope_coupling ? "AC" : "DC", 1);
 
+	// Display voltage divider warning if enabled
+	if (_app_scope_vdiv)
+	{
+		ssd1306_set_text(70, 8, 1, "0.787x", 1);
+	}
+
 	// Render the graticule and waveform
 	gfx_graticule(0, 16, &grcfg, 1);
 	// Make sure we have at least 32 samples before the trigger, or start at 0 if less

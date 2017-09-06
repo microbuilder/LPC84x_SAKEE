@@ -106,6 +106,12 @@ void app_vm_init(void)
 	// Render AD/DC coupling indicator
 	ssd1306_set_text(127-18, 8, 1, _app_vm_coupling ? "AC" : "DC", 1);
 
+	// Display voltage divider warning if enabled
+	if (_app_vm_vdiv)
+	{
+		ssd1306_set_text(127-54, 8, 1, "0.787x", 1);
+	}
+
     ssd1306_set_text(90, 32, 1, "mVOLTS", 1);
 
     // Render the bottom button options
