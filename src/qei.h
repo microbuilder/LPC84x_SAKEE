@@ -27,8 +27,6 @@ int32_t qei_offset_step    (void);
 void    qei_reset_step     (void);
 void    qei_reset_step_val (int32_t value);
 
-uint8_t qei_read_pin       (void);
-
 #ifdef __cplusplus
  }
 #endif

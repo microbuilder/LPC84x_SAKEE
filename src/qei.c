@@ -20,17 +20,11 @@
 #define PIN_B_BIT    (QEI_B_PIN % 32)
 
 volatile int32_t _qei_step = 0;
-volatile uint8_t enc_prev_pos = 0; // pin A bit0, pin B bit1
+volatile uint8_t _a_last = 0; // pin A bit0, pin B bit1
 
-uint8_t qei_read_pin(void)
+uint8_t qei_read_a(void)
 {
-  uint8_t ret;
-
-  // Encoder is active LOW
-  ret  = bit_is_clear(LPC_GPIO_PORT->PIN[PIN_A_PORT], PIN_A_BIT) ? 0x01 : 0;
-  ret |= bit_is_clear(LPC_GPIO_PORT->PIN[PIN_B_PORT], PIN_B_BIT) ? 0x02 : 0;
-
-  return ret;
+  return bit_test(LPC_GPIO_PORT->PIN[PIN_A_PORT], PIN_A_BIT);
 }
 
 int32_t qei_abs_step (void)
@@ -76,103 +70,55 @@ void qei_init(void)
 
   // Configure Pin A & B as interrupt
   LPC_SYSCON->PINTSEL[0] = QEI_A_PIN;
-  LPC_SYSCON->PINTSEL[1] = QEI_B_PIN;
+//  LPC_SYSCON->PINTSEL[1] = QEI_B_PIN;
 
   // Configure the Pin interrupt mode register (a.k.a ISEL) for edge-sensitive on PINTSEL1,0
   LPC_PIN_INT->ISEL = 0x00;
 
-  // Configure the IENR (pin interrupt enable rising) for rising edges on PINTSEL0,1
-  LPC_PIN_INT->SIENR = 0x3;
+  // Configure the IENR (pin interrupt enable rising) for rising edges
+  LPC_PIN_INT->SIENR = 0x01;
 
-  // Configure the IENF (pin interrupt enable falling) for falling edges on PINTSEL0,1
-  LPC_PIN_INT->SIENF = 0x3;
+  // Configure the IENF (pin interrupt enable falling) for falling edges
+  LPC_PIN_INT->SIENF = 0x01;
 
   // Clear any pending or left-over interrupt flags
   LPC_PIN_INT->IST = 0xFF;
 
   // Get initial state
-  enc_prev_pos = qei_read_pin();
+  _a_last = qei_read_a();
 
   NVIC_EnableIRQ(PININT0_IRQn);
-  NVIC_EnableIRQ(PININT1_IRQn);
+//  NVIC_EnableIRQ(PININT1_IRQn);
 }
 
-/**************************************************************************/
-/*!
-    @author   Mike Barela for Adafruit Industries
-    @license  MIT
-
-    This is an example of using the Adafruit Pro Trinket with a rotary
-    encoder as a USB HID Device.  Turning the knob controls the sound on
-    a multimedia computer, pressing the knob mutes/unmutes the sound
-
-    Adafruit invests time and resources providing this open source code,
-    please support Adafruit and open-source hardware by purchasing
-    products from Adafruit!
-
-    @section  HISTORY
-
-    v1.0  - First release 1/26/2015  Mike Barela based on code by Frank Zhou
-*/
-/**************************************************************************/
+/**
+ * Reference http://howtomechatronics.com/tutorials/arduino/rotary-encoder-works-use-arduino/
+ * We can notice that the two output signals are displaced at 90 degrees out of phase from each other.
+ * If the encoder is rotating clockwise the output A will be ahead of output B.So if we count the steps
+ * each time the signal changes, from High to Low or from Low to High, we can notice at that time
+ * the two output signals have opposite values. Vice versa, if the encoder is rotating counter clockwise,
+ * the output signals have equal values. So considering this, we can easily program our controller to read
+ * the encoder position and the rotation direction.
+ * @param pin
+ */
 void qei_isr(uint8_t pin)
 {
   LPC_PIN_INT->IST = bit(pin);
 
-  static uint8_t enc_flags = 0;
+  uint8_t a_value = qei_read_a();
 
-  uint8_t enc_cur_pos = qei_read_pin();
-
-  // if any rotation at all
-  if (enc_cur_pos != enc_prev_pos)
+  if ( a_value != _a_last )
   {
-    if (enc_prev_pos == 0x00)
-    {
-      // this is the first edge
-      if (enc_cur_pos == 0x01) {
-        enc_flags |= (1 << 0);
-      }
-      else if (enc_cur_pos == 0x02) {
-        enc_flags |= (1 << 1);
-      }
-    }
+     if ( a_value != bit_test(LPC_GPIO_PORT->PIN[PIN_B_PORT], PIN_B_BIT) )
+     {
+       _qei_step++;
+     }else
+     {
+       _qei_step--;
+     }
 
-    if (enc_cur_pos == 0x03)
-    {
-      // this is when the encoder is in the middle of a "step"
-      enc_flags |= (1 << 4);
-    }
-    else if (enc_cur_pos == 0x00)
-    {
-      // this is the final edge
-      if (enc_prev_pos == 0x02) {
-        enc_flags |= (1 << 2);
-      }
-      else if (enc_prev_pos == 0x01) {
-        enc_flags |= (1 << 3);
-      }
-
-      // check the first and last edge
-      // or maybe one edge is missing, if missing then require the middle state
-      // this will reject bounces and false movements
-      if (bit_is_set(enc_flags, 0) && (bit_is_set(enc_flags, 2) || bit_is_set(enc_flags, 4))) {
-        _qei_step++;
-      }
-      else if (bit_is_set(enc_flags, 2) && (bit_is_set(enc_flags, 0) || bit_is_set(enc_flags, 4))) {
-        _qei_step++;
-      }
-      else if (bit_is_set(enc_flags, 1) && (bit_is_set(enc_flags, 3) || bit_is_set(enc_flags, 4))) {
-        _qei_step--;
-      }
-      else if (bit_is_set(enc_flags, 3) && (bit_is_set(enc_flags, 1) || bit_is_set(enc_flags, 4))) {
-        _qei_step--;
-      }
-
-      enc_flags = 0; // reset for next time
-    }
+     _a_last = a_value;
   }
-
-  enc_prev_pos = enc_cur_pos;
 }
 
 void PININT0_IRQHandler(void)
@@ -180,7 +126,7 @@ void PININT0_IRQHandler(void)
   qei_isr(0);
 }
 
-void PININT1_IRQHandler(void)
-{
-  qei_isr(1);
-}
+//void PININT1_IRQHandler(void)
+//{
+//  qei_isr(1);
+//}
