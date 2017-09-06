@@ -24,6 +24,8 @@
 
 int adc_poll_init(void)
 {
+	LPC_SYSCON->SYSAHBCLKCTRL0 |= (IOCON);  // Enable the IOCON clock
+
 	// Configures ADC2 (P0_14) on the LPC845,
 	// which corresponds to pin A0 on the Arduino headers.
 	// Configure the SWM (see utilities_lib and lpc8xx_swm.h)

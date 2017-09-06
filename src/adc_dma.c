@@ -53,6 +53,21 @@ static inline void disable_sample_timer(void)
 
 void adc_dma_init(void)
 {
+  /*------------ IOCON ------------*/
+  // The pull-up/down resistor needs to be disabled
+  // to avoid interference with ADC conversions
+  LPC_SYSCON->SYSAHBCLKCTRL0 |= (IOCON);  // Enable the IOCON clock
+  if (_channel == 2)
+  {
+	// Configures ADC2 (P0_14) on the LPC845,
+	LPC_IOCON->PIO0_14 = 1<<7;	 			// No pull-up/down
+  }
+  if (_channel == 3)
+  {
+	// Configures ADC3 (P0_23) on the LPC845
+	LPC_IOCON->PIO0_23 = 1<<7;	 			// No pull-up/down
+  }
+
   /*------------- ADC -------------*/
   // Power up and reset the ADC, enable clocks to peripherals
   LPC_SYSCON->PDRUNCFG &= ~(ADC_PD);		// Power up the ADC
