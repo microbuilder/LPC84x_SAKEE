@@ -20,6 +20,9 @@
 #include "LPC8xx.h"
 #include "config.h"
 
+// 1 use SCT, 0 use GPIO for QEI encoder
+#define USE_SCT            0
+
 void    qei_init           (void);
 
 int32_t qei_abs_step       (void);
