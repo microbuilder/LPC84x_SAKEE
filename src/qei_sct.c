@@ -277,24 +277,25 @@ uint32_t init_qei(uint32_t state)
 {
 	uint32_t result;
 
-	switch (state) {
-	case 0:
-		QEI_A_LOW;
-		QEI_B_LOW;
-		break;
-	case 1:
-		QEI_A_HIGH;
-		QEI_B_LOW;
-		break;
-	case 2:
-		QEI_A_LOW;
-		QEI_B_HIGH;
-		break;
-	case 3:
-	default:
-		QEI_A_HIGH;
-		QEI_B_HIGH;
-		break;
+	switch (state)
+	{
+		case 0:
+			QEI_A_LOW;
+			QEI_B_LOW;
+			break;
+		case 1:
+			QEI_A_HIGH;
+			QEI_B_LOW;
+			break;
+		case 2:
+			QEI_A_LOW;
+			QEI_B_HIGH;
+			break;
+		case 3:
+		default:
+			QEI_A_HIGH;
+			QEI_B_HIGH;
+			break;
 	}
 
 	result = 0;
@@ -308,14 +309,18 @@ void SCT_IRQHandler(void)
 
 	sct_isr_count++;
 
-	LPC_SCT0->EVFLAG = 0x000000FF;				        //clear all event flags
+	LPC_SCT0->EVFLAG = 0x000000FF;	// Clear all event flags
 
-	//update sw_qei_count based on the direction
-	if ((LPC_SCT0->OUTPUT & (1 << sct_out_qei_direction)) == 0) { //CW direction
+	// Update step counter based on the direction
+	// ToDo: Add int overflow control for long running systems
+	if ((LPC_SCT0->OUTPUT & (1 << sct_out_qei_direction)) == 0)
+	{ //CW direction
 		_qei_step++;
-	} else { //CCW direction
+	}
+	else
+	{ //CCW direction
 		_qei_step--;
-	} //sw qei count uptede end
+	}
 
 	LPC_GPIO_PORT->CLR[SCT0ISR_PORT] = 1 << SCT0ISR_PIN;
 
