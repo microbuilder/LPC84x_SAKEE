@@ -1,14 +1,14 @@
 # LPC SAKEE
 
-LPC84x SAKEE (Swiss Army Knife for Engineers), is a portable debug tool based
-on the LPC845 ARM Cortex M0+ MCU from NXP Semiconductors.
+LPC84x SAKEE (Swiss Army Knife for Electric Engineers), is a portable debug
+tool based on the LPC845 ARM Cortex M0+ MCU from NXP Semiconductors.
 
 ## Features
 
 While users are free to extend SAKEE with new modules, the following
 functionality is currently provided as part of this codebase:
 
-- 12-bit ADC-based oscilloscope with 1K sample buffer and HW triggering
+- 12-bit oscilloscope with 1K sample buffer and HW triggering
 - 10-bit waveform generator with user configurable output
 - I2C bus scanner
 - Voltmeter
