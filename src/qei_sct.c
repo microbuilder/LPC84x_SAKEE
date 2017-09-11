@@ -169,7 +169,6 @@ uint32_t init_sct(uint32_t setup)
 	
 	LPC_SYSCON->SYSAHBCLKCTRL0 |= (GPIO0 | GPIO1 | SWM);				//enable access to SWM
 
-#if 0
 	LPC_SYSCON->PRESETCTRL0 |= 1<<18;         //clear IOCON reset
 	LPC_SYSCON->SYSAHBCLKCTRL0 |= 1<<18;      //enable IOCON clock
 	
@@ -178,7 +177,6 @@ uint32_t init_sct(uint32_t setup)
 	
 	LPC_SYSCON->PRESETCTRL0 |= 1<<20;         //clear GPIO1 reset
 	LPC_SYSCON->SYSAHBCLKCTRL0 |= 1<<20;      //enable GPIO1 clock
-#endif
 
 	//SCT setup begin
 	LPC_SYSCON->PRESETCTRL0 &= ~(1<<8);       //activate SCT reset
