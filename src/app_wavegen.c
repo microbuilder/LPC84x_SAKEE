@@ -282,7 +282,7 @@ void app_wavegen_run(void)
 		// If BUTTON_USER2 is pressed, toggle speaker/DACOUT
 		if (button_pressed() &  ( 1 << BUTTON_USER2))
 		{
-		    // Toggle speaker or DAC GPIO output
+		    // Toggle speaker on DAC GPIO output
 			LPC_GPIO_PORT->NOT0 = (1 << DAC1EN_PIN);
 		}
 
