@@ -189,6 +189,13 @@ void button_init(void)
 
   // Start the action
   LPC_CAPT->CTRL = ctrl_reg_val;
+
+  // Start the MRT.
+  // The touch ISR feeds it and clears the mrt_expired flag.
+  // When MRT times out, the MRT ISR sets mrt_expired and sets up the CAP Touch, et. al. for low power mode.
+  // Touch interrupt wakes up into the touch ISR where CAP Touch, et. al. are reconfigured for normal polling
+  // and the process repeats.
+  //Setup_MRT();
 #endif
 }
 

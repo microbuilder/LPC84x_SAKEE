@@ -29,7 +29,7 @@ uint8_t          _app_scope_vdiv = 0;           // 0 = No input divider, 1 = Ena
 
 void app_scope_init(app_scope_rate_t rate)
 {
-	// Initialize the DMA and systick based ADC sampler
+	// Initialize the DMA and MRT based ADC sampler
 	adc_dma_init();
 	_app_scope_rate = rate;
 	adc_dma_set_rate(rate); // Set the ADC default sample rate in microseconds
