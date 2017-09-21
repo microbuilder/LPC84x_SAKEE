@@ -121,3 +121,43 @@
 #define DBGURST __XCONCAT(UART,INDEX,_RST_N)
 #define DBGUIRQ __XCONCAT(UART,INDEX,_IRQn)
 
+
+
+
+// CAPTOUCH
+// Define the analog comparator input to use
+//
+#define ACMP_IN_FOR_CAPTOUCH      ACOMP_IN5
+#define ACMP_I_FOR_CAPTOUCH       ACMP_I5
+#define ACMP_I_PORT_FOR_CAPTOUCH  ACMP_I5_PORT
+
+//
+// Associate the CAPT IRQ slot with the ACMP IRQ slot in the startup code, since they are shared
+//
+#define CAPT_IRQHandler CMP_IRQHandler
+
+//
+// Define some constants to be used
+//
+#define FREQ 4000000           // Set the divided FCLK frequency
+#define NUM_CALIB_SAMPLES 1000 // Set the number of times to sample during no touch baseline calibration
+#define NM_FRACTION 1          // Noise margin = (notouch_high-notouch_low)/NM_FRACTION
+#define NUM_SENSORS 2          // How many sensors / X pins are being used
+#define LOW_SENSOR 0           // The index of the lowest X pin used by this software
+#define CHAIN_LENGTH 64        // Number of taps of the DC finding decoder
+#define TOUCH_TRIGGERS_LOWER 1 // '1' if touch triggers lower, '0' if touch triggers higher than no-touch
+#define LP_MODE 2              // '0' for sleep, '1' for deep-sleep, '2' for power-down
+
+// None of the following are applicable to CapTouch buttons examples
+#define DB_VAL 75              // If using debounce, count up to this number
+#define DEBOUNCE 0             // '1' to introduce a debounce delay on the first touch after a no-touch
+#define FIR 0                  // '1' to use FIR averaging filter
+#define IIR 0                  // '1' to use IIR averaging filter
+#define BUTT 0                 // '1' to use digital Butterworth LPF
+#define DECIM 0                // '1' to use decimating filter
+#define NUM_SAMPLES 8          // Memory of the FIR filter (a.k.a. 'L')
+#define FILTER_GAIN 3          // Log2 of Filter gain for the FIR and IIR filters. Must always = Log2 of NUM_SAMPLES
+#define DECIMATE_FACTOR 4      // If using decimating filter decimate by this factor
+
+#define PWM_FREQ 100      // in cycles/second
+#define PWM_RES  100      // in counts/cycle
