@@ -161,3 +161,5 @@
 
 #define PWM_FREQ 100      // in cycles/second
 #define PWM_RES  100      // in counts/cycle
+
+#define CAPT_MRT_CH       1

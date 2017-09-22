@@ -91,6 +91,15 @@
  -----  ---   -----------
  P0.24        DEBUG UART RX
  P0.25        DEBUG UART TX
+
+ Captouch
+ On LPC845MAX YH, YL and AMCP5 already connected to a capacitor
+ -----  ---   -----------
+ P0.31        X0
+ P1.0         X1
+ P1.8         YL
+ P1.9         YH
+ P0.30        ACMP_I5 (wire-ored to YH)
  */
 
 void setup_debug_uart(void);	// Serial.c

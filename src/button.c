@@ -9,6 +9,8 @@
 */
 
 #include <stdbool.h>
+#include <stdio.h>
+#include <string.h>
 #include "LPC8xx.h"
 #include "chip_setup.h"
 #include "gpio.h"
@@ -98,17 +100,17 @@ void button_init(void)
 
   // Enable the CAP Touch functions on their pins in the SWM
   // The threshold is very sensitive to how many X pins are enabled in SWM/IOCON even if not activated in XPINSEL
-  EnableFixedPinFunc(CAPT_X0);
-  EnableFixedPinFunc(CAPT_X1);
-  //EnableFixedPinFunc(CAPT_X2);
-  //EnableFixedPinFunc(CAPT_X3);
-  //EnableFixedPinFunc(CAPT_X4);
-  //EnableFixedPinFunc(CAPT_X5);
-  //EnableFixedPinFunc(CAPT_X6);
-  //EnableFixedPinFunc(CAPT_X7);
-  //EnableFixedPinFunc(CAPT_X8);
-  EnableFixedPinFunc(CAPT_YL);
-  EnableFixedPinFunc(CAPT_YH);
+  EnableFixedPinFunc(CAPT_X0);    // P0.31
+  EnableFixedPinFunc(CAPT_X1);    // P1.0
+  //EnableFixedPinFunc(CAPT_X2);  // P1.1
+  //EnableFixedPinFunc(CAPT_X3);  // P1.2
+  //EnableFixedPinFunc(CAPT_X4);  // P1.3
+  //EnableFixedPinFunc(CAPT_X5);  // P1.4
+  //EnableFixedPinFunc(CAPT_X6);  // P1.5
+  //EnableFixedPinFunc(CAPT_X7);  // P1.6
+  //EnableFixedPinFunc(CAPT_X8);  // P1.7
+  EnableFixedPinFunc(CAPT_YL);    // P1.8
+  EnableFixedPinFunc(CAPT_YH);    // P1.9
 
   // Setup the FCLK for the CAP Touch block
   LPC_SYSCON->CAPTCLKSEL = CAPTCLKSEL_FRO_CLK;
@@ -196,6 +198,28 @@ void button_init(void)
   // Touch interrupt wakes up into the touch ISR where CAP Touch, et. al. are reconfigured for normal polling
   // and the process repeats.
   //Setup_MRT();
+
+  printf("Touch a sensor\r\n\n");
+  printf("BUTT   X0    X1   TOs   OVRs  TCNT\n\r");
+  printf("----  ----  ----  ----  ----  ----\n\r");
+
+	while (1)
+	{
+    if (touching) {
+      //LPC_GPIO_PORT->CLR[0] = 1<<(largest + 15); // One sensor board LED on
+      //LPC_GPIO_PORT->SET[0] = ~(1<<(largest + 15)); // All others off
+      printf("%4d  ", largest);
+    }
+    else {
+      //LPC_GPIO_PORT->SET[0] = (0x1FF<<15); // All sensor board LEDs off
+      printf("      ");
+    }
+    for (uint32_t x=0; x<NUM_SENSORS-1; x++) {
+      printf("%4d  ", x_data[x]&0xFFF);
+      //printf("%4d  ", last_touch_cnt[x]&0xFFF);
+    }
+    printf("%4d  %4d  %4d  %4d\r", x_data[NUM_SENSORS-1]&0xFFF, to_cnt, ovr_cnt, (LPC_CAPT->POLL_TCNT>>TCNT)&0xFFF);
+	}
 #endif
 }
 
