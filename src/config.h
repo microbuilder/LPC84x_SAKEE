@@ -43,13 +43,17 @@
 
 #include "swm.h"
 
-#define MV_PER_LSB    		(3300.0F / 0xFFF)	// 3.3V VREF
+#define VERSION_MAJOR             (0)
+#define VERSION_MINOR             (5)
+#define VERSION_REVISION          (0)
+
+#define MV_PER_LSB    		      (3300.0F / 0xFFF)	// 3.3V VREF
 
 // LED PIN config
-#define LED_PIN     (P0_0)	/* Blue */
+#define LED_PIN                   (P0_0)	/* Blue */
 
 // Analog switch for DAC1 output to GPIO (L) or speaker (H)
-#define DAC1EN_PIN   (P0_18)
+#define DAC1EN_PIN                (P0_18)
 
 // Analog in enable pin
 #define AN_IN_220NF_BLOCKING      (P1_1)    /* 220nF inline AC/DC blocking cap */
@@ -58,17 +62,17 @@
 
 // All Buttons should be the same port (port 0)
 // Otherwise button.c need to be updated
-#define QEI_A_PIN    (P0_20)
-#define QEI_B_PIN    (P0_21)
-#define QEI_SW_PIN   (P0_19)
+#define QEI_A_PIN                 (P0_20)
+#define QEI_B_PIN                 (P0_21)
+#define QEI_SW_PIN                (P0_19)
 
-#define BUTTON_ISP	 (P0_12)
-#define BUTTON_WAKE  (P0_4)
-#define BUTTON_USER1 (P0_13)
-#define BUTTON_USER2 (P0_7)
+#define BUTTON_ISP	              (P0_12)
+#define BUTTON_WAKE               (P0_4)
+#define BUTTON_USER1              (P0_13)
+#define BUTTON_USER2              (P0_7)
 
-#define ADC_CHANNEL  (2) // Pin P0.14 (A0)
-#define WAVEGEN_DAC  (1) // 0 = P0.17/ANALOG4, 1 = 0.29/ANALOG5
+#define ADC_CHANNEL               (2) // Pin P0.14 (A0)
+#define WAVEGEN_DAC               (1) // 0 = P0.17/ANALOG4, 1 = 0.29/ANALOG5
 
 // NOTE: USB Serial pins are defined in chip_setup.h
 // USB Serial is routed through the MBED USB CDC interface using:
@@ -76,10 +80,10 @@
 //   RXD = P0_24
 
 // Common functions
-#define bit(_n)               ( 1 << (_n) )
-#define bit_test(_x, _n)      ( ((_x) & bit(_n)) ? 1 : 0 )
-#define bit_is_set(_x, _n)    bit_test(_x, _n)
-#define bit_is_clear(_x, _n)  (!bit_test(_x, _n))
+#define bit(_n)                   ( 1 << (_n) )
+#define bit_test(_x, _n)          ( ((_x) & bit(_n)) ? 1 : 0 )
+#define bit_is_set(_x, _n)        (bit_test(_x, _n))
+#define bit_is_clear(_x, _n)      (!bit_test(_x, _n))
 
 #ifdef __cplusplus
  }

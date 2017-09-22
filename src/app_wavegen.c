@@ -38,7 +38,7 @@ typedef enum
 } app_wavegen_wave_t;
 
 static app_wavegen_wave_t _app_wavegen_curwave = APP_WAVEGEN_WAVE_SINE;
-static uint16_t _app_wavegen_frequency_hz = 500;
+static uint16_t _app_wavegen_frequency_hz = 100;
 
 static const uint16_t app_wavegen_sine_wave[64] = {
 	279, 306, 333, 360, 386, 411, 434, 456,
@@ -282,7 +282,7 @@ void app_wavegen_run(void)
 		// If BUTTON_USER2 is pressed, toggle speaker/DACOUT
 		if (button_pressed() &  ( 1 << BUTTON_USER2))
 		{
-		    // Toggle speaker or DAC GPIO output
+		    // Toggle speaker on DAC GPIO output
 			LPC_GPIO_PORT->NOT0 = (1 << DAC1EN_PIN);
 		}
 
