@@ -97,7 +97,7 @@
 //
 #define DBGUART 0                  // Choose the index for the debug UART (0 for UART0, 1 for UART1, etc.)
 #define DBGBAUDRATE 9600           // Choose the baud rate for the debug UART
-#define USE_MBED_PORT 0            // '1' to use MBED serial port, '0' to use user-defined port pins for debug UART
+#define USE_MBED_PORT 1            // '1' to use MBED serial port, '0' to use user-defined port pins for debug UART
 
 #if (USE_MBED_PORT == 1)
   #define DBGTXPIN TARGET_TX       // For MBED serial port (see board.h)
