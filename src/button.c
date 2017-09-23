@@ -197,8 +197,9 @@ void button_init(void)
   // When MRT times out, the MRT ISR sets mrt_expired and sets up the CAP Touch, et. al. for low power mode.
   // Touch interrupt wakes up into the touch ISR where CAP Touch, et. al. are reconfigured for normal polling
   // and the process repeats.
-  //Setup_MRT();
+//  Setup_MRT();
 
+#if 0
   printf("Touch a sensor\r\n\n");
   printf("BUTT   X0    X1   TOs   OVRs  TCNT\n\r");
   printf("----  ----  ----  ----  ----  ----\n\r");
@@ -220,6 +221,7 @@ void button_init(void)
     }
     printf("%4d  %4d  %4d  %4d\r", x_data[NUM_SENSORS-1]&0xFFF, to_cnt, ovr_cnt, (LPC_CAPT->POLL_TCNT>>TCNT)&0xFFF);
 	}
+#endif
 #endif
 }
 

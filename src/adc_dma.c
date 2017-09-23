@@ -191,6 +191,7 @@ uint32_t adc_dma_get_rate(void)
 	return _adc_rate_us;
 }
 
+#if 1 // TODO there is conflict with Captouch using MRT
 void MRT_IRQHandler(void)
 {
   // Get a new ADC sample using the START bit
@@ -199,6 +200,7 @@ void MRT_IRQHandler(void)
   // clear interrupt
   LPC_MRT->IRQ_FLAG |= LPC_MRT->IRQ_FLAG;
 }
+#endif
 
 static void cfg_dma_xfer(uint32_t count)
 {

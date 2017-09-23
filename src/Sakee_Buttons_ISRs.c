@@ -189,7 +189,7 @@ void CAPT_IRQHandler(void) {
 
 
 
-
+#if 0
 //
 // MRT ISR
 //
@@ -202,5 +202,5 @@ void MRT_IRQHandler(void) {
   mrt_expired = 1;
 } // end of ISR
 
-
+#endif
 
