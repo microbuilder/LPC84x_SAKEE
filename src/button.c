@@ -225,6 +225,13 @@ void button_init(void)
 #endif
 }
 
+uint32_t capt_pressed(void)
+{
+  if (!touching) return 0;
+
+  return ( 1 << (CAPT_PAD_0+largest) );
+}
+
 /**
  * Check if a button has been pressed, including basic debouncing.
  *
@@ -251,8 +258,15 @@ uint32_t button_pressed(void)
   // Last debounce state, used to detect changes
   static uint32_t lastDebounced = 0;
 
+#if BUTTON_USE_CAPTOUCH
+  // result always take in captouch
+  uint32_t result = capt_pressed();
+#else
+  uint32_t result = 0;
+#endif
+
   // Too soon, nothing to do
-  if (millis() - lastReadTime < SAMPLE_TIME ) return 0;
+  if (millis() - lastReadTime < SAMPLE_TIME ) return result;
 
   lastReadTime = millis();
 
@@ -272,7 +286,7 @@ uint32_t button_pressed(void)
   }
 
   // 'result' = button changed and passes debounce checks, 0 = failure or not-asserted
-  uint32_t result = (debounced ^ lastDebounced) & debounced;
+  result |= (debounced ^ lastDebounced) & debounced;
 
   lastDebounced = debounced;
 

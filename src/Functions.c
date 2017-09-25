@@ -330,9 +330,11 @@ void Enter_Normal_Mode() {
   // Restore bus clocks to necessary peripherals
   LPC_SYSCON->SYSAHBCLKCTRL[0] |= (UART0|GPIO0|GPIO1);
   
+  #if 0
   // Restart the MRT and clear the mrt_expired flag on wakeup
   LPC_MRT->Channel[0].INTVAL = ForceLoad | 120000000;
   mrt_expired = 0;
+  #endif
 
   // Revert to analog comparator measurement method and no poll delay
   LPC_CAPT->CTRL &= ~(0x3<<POLLMODE);    // Go to poll mode off

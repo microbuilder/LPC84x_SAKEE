@@ -158,7 +158,9 @@ void CAPT_IRQHandler(void) {
 #endif
 
       // 'Feed' the MRT on every touch or false_notouch
+      #if 0
       LPC_MRT->Channel[0].INTVAL = ForceLoad | 120000000;
+      #endif
   
       LPC_CAPT->STATUS = YESTOUCH|NOTOUCH;      // Clear the interrupt flag by writing '1' to it
       return;                                   // Return from interrupt
