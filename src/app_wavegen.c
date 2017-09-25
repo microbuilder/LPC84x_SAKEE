@@ -297,9 +297,11 @@ void app_wavegen_run(void)
 	}
 
 	// Wait for the QEI switch to exit
-	capt_nvic_enable();
 	while (!(button_pressed() & (1 << QEI_SW_PIN)))
 	{
+		// Enable the cap touch interrupt
+		capt_nvic_enable();
+
 		// If CAPT_PAD_1 or BUTTON_USER2 is pressed, toggle speaker/DACOUT
 		if (button_pressed() & ( 1 << (BUTTON_USE_CAPTOUCH ? CAPT_PAD_0 : BUTTON_USER2)))
 		{
@@ -345,6 +347,7 @@ void app_wavegen_run(void)
 			delay_ms(100);
 		}
 
+		// Disable the cap touch interrupt to avoid problems elsewhere
 		capt_nvic_disable();
 
 		// Check for a scroll request on the QEI

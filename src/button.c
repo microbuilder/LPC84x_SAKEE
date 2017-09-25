@@ -187,7 +187,11 @@ void button_init(void)
   LPC_CAPT->INTENSET = YESTOUCH|NOTOUCH|TIMEOUT|OVERRUN;
 
   // Enable the CAP Touch IRQ in the NVIC
-//  NVIC_EnableIRQ(CAPT_IRQn);
+  // Note this is currently disabled by default since the captouch
+  // ISR is very demanding, and should only be enabled on an as-needed
+  // basis, and disabled when possible.
+  // ToDo: Improve ISR performance
+  // NVIC_EnableIRQ(CAPT_IRQn);
 
   // Start the action
   LPC_CAPT->CTRL = ctrl_reg_val;
