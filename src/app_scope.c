@@ -126,7 +126,7 @@ void app_scope_render_waveform(int16_t sample, int32_t offset_us)
 	ssd1306_clear();
 
 	// Render the title bars
-	ssd1306_set_text(0, 0, 1, "NXP SAKEE", 1);
+	ssd1306_set_text(0, 0, 1, "LPC SAKEE", 1);
 	ssd1306_set_text(127 - 48, 0, 1, "WAVEFORM", 1);	// 48 pixels wide
 
 	// Render AD/DC coupling indicator
@@ -193,7 +193,7 @@ void app_scope_arm_trigger(void)
 	ssd1306_clear();
 
 	// Render the title bars
-    ssd1306_set_text(0, 0, 1, "NXP SAKEE", 1);
+    ssd1306_set_text(0, 0, 1, "LPC SAKEE", 1);
     ssd1306_set_text(127-48, 0, 1, "WAVEFORM", 1);	// 48 pixels wide
 
     // Render the bottom button options
@@ -328,7 +328,7 @@ void app_scope_run(void)
 	ssd1306_clear();
 
 	// Render the title bars
-    ssd1306_set_text(0, 0, 1, "NXP SAKEE", 1);
+    ssd1306_set_text(0, 0, 1, "LPC SAKEE", 1);
     ssd1306_set_text(127-48, 0, 1, "WAVEFORM", 1);	// 48 pixels wide
 
     // Render the bottom button options

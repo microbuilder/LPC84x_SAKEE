@@ -123,7 +123,7 @@ int main(void)
 
 	// UART init (see Serial.c)
 	setup_debug_uart();
-	printf("NXP SAKEE\n\r");
+	printf("LPC SAKEE\n\r");
 
 	// Reset and enable the GPIO module (peripherals_lib)
 	GPIOInit();
