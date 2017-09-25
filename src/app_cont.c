@@ -58,7 +58,7 @@ void app_cont_init(void)
 void app_cont_run(void)
 {
 	ssd1306_clear();
-    ssd1306_set_text(0, 0, 1, "NXP SAKEE", 1);
+    ssd1306_set_text(0, 0, 1, "LPC SAKEE", 1);
     ssd1306_set_text(127-60, 0, 1, "CONT TESTER", 1);
 	ssd1306_set_text(8, 24, 1, "CONNECT V1 AND COM FOR", 1);
 	ssd1306_set_text(8, 32, 1, "   CONTINUITY TEST", 1);

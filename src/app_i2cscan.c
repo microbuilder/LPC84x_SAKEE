@@ -92,7 +92,7 @@ void app_i2cscan_run(void)
 	ssd1306_clear();
 
 	// Render the title bars
-    ssd1306_set_text(0, 0, 1, "NXP SAKEE", 1);
+    ssd1306_set_text(0, 0, 1, "LPC SAKEE", 1);
     ssd1306_set_text(127-66, 0, 1, "I2C SCANNER", 1);	// 66 pixels wide
 
     // Render the static address label text

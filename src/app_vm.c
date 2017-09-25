@@ -100,7 +100,7 @@ void app_vm_init(void)
 	}
 
 	// Render the title bars
-    ssd1306_set_text(0, 0, 1, "NXP SAKEE", 1);
+    ssd1306_set_text(0, 0, 1, "LPC SAKEE", 1);
     ssd1306_set_text(127-54, 0, 1, "VOLTMETER", 1);	// 54 pixels wide
 
 	// Render AD/DC coupling indicator

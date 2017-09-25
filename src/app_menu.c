@@ -26,7 +26,6 @@ void app_menu_render();
 void app_menu_init(void)
 {
 	ssd1306_init();		// Reset the display
-    button_init();
 }
 
 void app_menu_render()
@@ -34,7 +33,7 @@ void app_menu_render()
 	ssd1306_clear();
 
 	// Render the title bars
-    ssd1306_set_text(0, 0, 1, "NXP SAKEE", 1);
+    ssd1306_set_text(0, 0, 1, "LPC SAKEE", 1);
     ssd1306_set_text(127-54, 0, 1, "MAIN MENU", 1);	// 54 pixels wide
 
     ssd1306_set_text(10, 12, 1, "ABOUT", 1);
