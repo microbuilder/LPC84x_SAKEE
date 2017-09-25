@@ -43,13 +43,23 @@ int32_t qei_abs_step (void)
 #endif
 }
 
+// Sets the step counter to a specific value to invalidate clicks in certain situations
+void qei_reset_step_val (int32_t value)
+{
+#if QEI_USE_SCT
+  _qei_step = 2*value;
+#else
+  _qei_step = value;
+#endif
+}
+
 int32_t qei_offset_step (void)
 {
   static int32_t last_value = 0;
 
-  int32_t ret = _qei_step - last_value;
+  int32_t ret = qei_abs_step() - last_value;
 
-  last_value =  _qei_step;
+  last_value =  qei_abs_step();
 
   return ret;
 }
@@ -57,12 +67,6 @@ int32_t qei_offset_step (void)
 void qei_reset_step (void)
 {
   _qei_step = 0;
-}
-
-// Sets the step counter to a specific value to invalidate clicks in certain situations
-void qei_reset_step_val (int32_t value)
-{
-  _qei_step = value;
 }
 
 #if !QEI_USE_SCT
