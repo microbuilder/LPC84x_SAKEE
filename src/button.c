@@ -187,7 +187,7 @@ void button_init(void)
   LPC_CAPT->INTENSET = YESTOUCH|NOTOUCH|TIMEOUT|OVERRUN;
 
   // Enable the CAP Touch IRQ in the NVIC
-  NVIC_EnableIRQ(CAPT_IRQn);
+//  NVIC_EnableIRQ(CAPT_IRQn);
 
   // Start the action
   LPC_CAPT->CTRL = ctrl_reg_val;

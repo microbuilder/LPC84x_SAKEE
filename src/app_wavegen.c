@@ -296,8 +296,10 @@ void app_wavegen_run(void)
 	while (!(button_pressed() & (1 << QEI_SW_PIN)))
 	{
 		// If CAPT_PAD_0 or BUTTON_USER2 is pressed, toggle speaker/DACOUT
+	  capt_nvic_enable();
 		if (button_pressed() &  ( 1 << (BUTTON_USE_CAPTOUCH ? CAPT_PAD_1 : BUTTON_USER2)))
 		{
+		  capt_nvic_disable();
 			_app_wavegen_output_spkr = _app_wavegen_output_spkr ? 0: 1;
 		    // Toggle speaker on DAC GPIO output
 			LPC_GPIO_PORT->NOT0 = (1 << DAC1EN_PIN);
