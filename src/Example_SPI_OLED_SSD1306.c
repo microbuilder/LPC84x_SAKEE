@@ -60,7 +60,7 @@
  -----  ---   -----------
  P1.1         AC/DC coupling selection (220nF inline blocking cap)
  P1.2         0.787X voltage divider enable (27K+100K)
- P1.3         3.3V or 0.971V VRef selection (240K+100K divider)
+ P1.3         3.3V or 0.971V VRef selection (240K+100K divider) -- NOT USED, 3.3V ONLY!
  P0.14  A0    Analog Input (ADC2)
 
  I2C BUS SCANNER
@@ -92,14 +92,14 @@
  P0.24        DEBUG UART RX
  P0.25        DEBUG UART TX
 
- Captouch
- On LPC845MAX YH, YL and AMCP5 already connected to a capacitor
+ CAPACITIVE TOUCH BUTTONS
+ LPC          Description
  -----  ---   -----------
  P0.31        X0
  P1.0         X1
  P1.8         YL
  P1.9         YH
- P0.30        ACMP_I5 (wire-ored to YH)
+ P0.30        ACMP_I5
  */
 
 void setup_debug_uart(void);	// Serial.c
