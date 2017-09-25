@@ -225,12 +225,14 @@ void button_init(void)
 #endif
 }
 
+#if BUTTON_USE_CAPTOUCH
 uint32_t capt_pressed(void)
 {
   if (!touching) return 0;
 
   return ( 1 << (CAPT_PAD_0+largest) );
 }
+#endif
 
 /**
  * Check if a button has been pressed, including basic debouncing.

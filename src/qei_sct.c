@@ -18,7 +18,7 @@
 #include "qei.h"
 #include "sct_generic_addon.h"
 
-#if USE_SCT
+#if QEI_USE_SCT
 
 //volatile uint32_t main_loop_counter, i, j;
 //volatile uint32_t user_gate_pattern, user_gate_counter;
