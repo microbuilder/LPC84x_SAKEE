@@ -119,9 +119,12 @@ uint32_t init_sct(void)
 	LPC_INMUX_TRIGMUX->SCT0_INMUX1 = 1;						//SCT0_PIN1 = SWM
 	LPC_IOCON->PIO0_21 = (LPC_IOCON->PIO0_21 & ~(3 << 3)) | 1 << 5 | 0 << 3;//no PU/PD; enable hysteresis
 
-//	LPC_SWM->PINASSIGN7 = (LPC_SWM->PINASSIGN7 & ~(0xFF << 24))
-//			| ((0 * 32 + 18) << 24);//CTOUT_0 @ P0.18 (counting up indicator)
-//	LPC_IOCON->PIO0_18 = (LPC_IOCON->PIO0_18 & ~(3 << 3)) | 1 << 5 | 0 << 3;//no PU/PD; enable hysteresis
+	/*
+	 * Removed due to conflict with DAC SPEAKER EN on P0.18
+	LPC_SWM->PINASSIGN7 = (LPC_SWM->PINASSIGN7 & ~(0xFF << 24))
+			| ((0 * 32 + 18) << 24);//CTOUT_0 @ P0.18 (counting up indicator)
+	LPC_IOCON->PIO0_18 = (LPC_IOCON->PIO0_18 & ~(3 << 3)) | 1 << 5 | 0 << 3;//no PU/PD; enable hysteresis
+	*/
 
 	LPC_SCT0->CONFIG = 0 << 18 |	//no autolimit H
 			0 << 17 |	//no autolimit L
