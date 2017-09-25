@@ -286,7 +286,7 @@ uint32_t button_pressed(void)
   }
 
   // 'result' = button changed and passes debounce checks, 0 = failure or not-asserted
-  result |= (debounced ^ lastDebounced) & debounced;
+  result |= ((debounced ^ lastDebounced) & debounced);
 
   lastDebounced = debounced;
 

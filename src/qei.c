@@ -19,7 +19,7 @@
 #define PIN_B_PORT   (QEI_B_PIN / 32)
 #define PIN_B_BIT    (QEI_B_PIN % 32)
 
-#if !USE_SCT
+#if !QEI_USE_SCT
 volatile int32_t _qei_step = 0;
 volatile uint8_t _a_last = 0; // pin A bit0, pin B bit1
 
@@ -61,7 +61,7 @@ void qei_reset_step_val (int32_t value)
   _qei_step = value;
 }
 
-#if !USE_SCT
+#if !QEI_USE_SCT
 void qei_init(void)
 {
   LPC_SYSCON->SYSAHBCLKCTRL0 |= (GPIO_INT);
