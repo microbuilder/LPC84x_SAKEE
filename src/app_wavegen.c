@@ -297,6 +297,7 @@ void app_wavegen_run(void)
 	}
 
 	// Wait for the QEI switch to exit
+	capt_nvic_enable();
 	while (!(button_pressed() & (1 << QEI_SW_PIN)))
 	{
 		// If CAPT_PAD_1 or BUTTON_USER2 is pressed, toggle speaker/DACOUT
@@ -343,6 +344,8 @@ void app_wavegen_run(void)
 			ssd1306_refresh();
 			delay_ms(100);
 		}
+
+		capt_nvic_disable();
 
 		// Check for a scroll request on the QEI
         // Adjust the trigger level by default if any rotation occurs
