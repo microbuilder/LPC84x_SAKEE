@@ -38,7 +38,7 @@ typedef enum
 } app_wavegen_wave_t;
 
 static app_wavegen_wave_t _app_wavegen_curwave = APP_WAVEGEN_WAVE_SINE;
-static uint16_t _app_wavegen_frequency_hz = APP_WAVEGEN_RATE_100_HZ;
+static uint16_t _app_wavegen_frequency_hz = APP_WAVEGEN_RATE_200_HZ;
 static uint8_t _app_wavegen_output_spkr = 0;
 
 static const uint16_t app_wavegen_sine_wave[64] = {
@@ -300,7 +300,7 @@ void app_wavegen_run(void)
 	while (!(button_pressed() & (1 << QEI_SW_PIN)))
 	{
 		// If CAPT_PAD_1 or BUTTON_USER2 is pressed, toggle speaker/DACOUT
-		if (button_pressed() &  ( 1 << (BUTTON_USE_CAPTOUCH ? CAPT_PAD_0 : BUTTON_USER2)))
+		if (button_pressed() & ( 1 << (BUTTON_USE_CAPTOUCH ? CAPT_PAD_0 : BUTTON_USER2)))
 		{
 			_app_wavegen_output_spkr = _app_wavegen_output_spkr ? 0: 1;
 		    // Toggle speaker on DAC GPIO output
@@ -319,22 +319,29 @@ void app_wavegen_run(void)
 			ssd1306_fill_rect(70, 40, 55, 8, 0);
 			ssd1306_set_text(70, 40, 1, _app_wavegen_output_spkr ? "SPKR OUT" : "DAC1 OUT", 1);
 			ssd1306_refresh();
-			// Delay to avoid rapid toggling due to noise
-			delay_ms(500);
+			delay_ms(100);
 		}
 
 		// It CAPT_PAD_0 or BUTTON_USER1 is pressed, change the output rate
-		if (button_pressed() &  ( 1 << (BUTTON_USE_CAPTOUCH ? CAPT_PAD_1 : BUTTON_USER1)))
+		if (button_pressed() & ( 1 << (BUTTON_USE_CAPTOUCH ? CAPT_PAD_1 : BUTTON_USER1)))
 		{
-			_app_wavegen_frequency_hz /= 2;
-			if (_app_wavegen_frequency_hz < APP_WAVEGEN_RATE_25_HZ)
+			if (_app_wavegen_frequency_hz == APP_WAVEGEN_RATE_1000_HZ)
 			{
 				_app_wavegen_frequency_hz = APP_WAVEGEN_RATE_800_HZ;
+			}
+			else
+			{
+				_app_wavegen_frequency_hz /= 2;
+			}
+			// Check if we need to wrap around to the top of the enum list
+			if (_app_wavegen_frequency_hz < APP_WAVEGEN_RATE_200_HZ)
+			{
+				_app_wavegen_frequency_hz = APP_WAVEGEN_RATE_1000_HZ;
 			}
 			// Delay to avoid rapid toggling due to noise
 			app_wavegen_render_setup();
 			ssd1306_refresh();
-			delay_ms(500);
+			delay_ms(100);
 		}
 
 		// Check for a scroll request on the QEI
