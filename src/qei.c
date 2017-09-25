@@ -36,7 +36,11 @@ uint8_t qei_read_a(void)
 
 int32_t qei_abs_step (void)
 {
+#if QEI_USE_SCT
+  return _qei_step/2;
+#else
   return _qei_step;
+#endif
 }
 
 int32_t qei_offset_step (void)
