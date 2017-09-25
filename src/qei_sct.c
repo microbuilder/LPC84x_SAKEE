@@ -5,10 +5,6 @@
  P0.20 [I] - SCT_IN0: QEI phA
  P0.21 [I] - SCT_IN1: QEI phB
  P0.18 [O] - SCT_OUT0: direction indicator (0: CW/forward, 1: CCW/reverse)
-
- P0.28 [O] - GPO: test synchro pulse
- P1.20 [O] - GPO: SCT isr indicator
-
  */
 
 #include "syscon.h"
@@ -27,7 +23,6 @@
 
 volatile uint32_t qei_state;
 volatile int32_t _qei_step;
-volatile uint32_t sct_isr_count;
 
 #define	SCT_CONFIGURATION	0
 
@@ -66,12 +61,6 @@ enum sct_event
 	sct_ev_qei11_A_fe,
 	sct_ev_qei11_B_fe
 };
-
-#define	SYNCHRO_PORT		(0)
-#define	SYNCHRO_PIN			(28)
-
-#define	SCT0ISR_PORT		(1)
-#define	SCT0ISR_PIN			(20)
 
 #define QEI_CW              (0)
 #define QEI_CCW             (1)
@@ -254,7 +243,6 @@ uint32_t init_sct(void)
 
 	LPC_SCT0->EVFLAG = 0x000000FF;				        //clear all event flags
 
-    sct_isr_count = 0;
 	NVIC_SetPriority(SCT_IRQn, 1);
 	NVIC_EnableIRQ(SCT_IRQn);
 
@@ -308,10 +296,6 @@ uint32_t init_qei(uint32_t state)
 
 void SCT_IRQHandler(void)
 {
-	LPC_GPIO_PORT->SET[SCT0ISR_PORT] = 1 << SCT0ISR_PIN;
-
-	sct_isr_count++;
-
 	LPC_SCT0->EVFLAG = 0x000000FF;	// Clear all event flags
 
 	// Update step counter based on the direction
@@ -324,8 +308,6 @@ void SCT_IRQHandler(void)
 	{ //CCW direction
 		_qei_step--;
 	}
-
-	LPC_GPIO_PORT->CLR[SCT0ISR_PORT] = 1 << SCT0ISR_PIN;
 
 	return;
 }
