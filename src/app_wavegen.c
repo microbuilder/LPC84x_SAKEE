@@ -39,6 +39,7 @@ typedef enum
 
 static app_wavegen_wave_t _app_wavegen_curwave = APP_WAVEGEN_WAVE_SINE;
 static uint16_t _app_wavegen_frequency_hz = 100;
+static uint8_t _app_wavegen_output_spkr = 0;
 
 static const uint16_t app_wavegen_sine_wave[64] = {
 	279, 306, 333, 360, 386, 411, 434, 456,
@@ -176,7 +177,7 @@ void app_wavegen_render_upload(void)
 	ssd1306_clear();
 
 	// Render the title bars
-	ssd1306_set_text(0, 0, 1, "NXP SAKEE", 1);
+	ssd1306_set_text(0, 0, 1, "LPC SAKEE", 1);
 	ssd1306_set_text(127 - 60, 0, 1, "DAC WAVEGEN", 1);
 
 	// Help Text
@@ -211,7 +212,7 @@ void app_wavegen_render_setup(void)
   ssd1306_clear();
 
   // Render the title bars
-  ssd1306_set_text(0, 0, 1, "NXP SAKEE", 1);
+  ssd1306_set_text(0, 0, 1, "LPC SAKEE", 1);
   ssd1306_set_text(127 - 60, 0, 1, "DAC WAVEGEN", 1);
   //ssd1306_set_text(16, 55, 0, "CLICK FOR MAIN MENU", 1);
 
@@ -220,7 +221,14 @@ void app_wavegen_render_setup(void)
   ssd1306_fill_rect(32, 55, 31, 8, 1);
   ssd1306_fill_rect(64, 55, 31, 8, 1);
   ssd1306_fill_rect(96, 55, 32, 8, 1);
-  ssd1306_set_text(101, 56, 0, "SPKR", 1);
+  if (_app_wavegen_output_spkr)
+  {
+	  ssd1306_set_text(97, 56, 0, "0>DAC1", 1);
+  }
+  else
+  {
+	  ssd1306_set_text(97, 56, 0, "0>SPKR", 1);
+  }
 
   // Render the graticule and waveform
   gfx_graticule(0, 16, &grcfg, 1);
@@ -273,17 +281,39 @@ void app_wavegen_run(void)
 
 	// Setup the analog switch that controls speaker/DACOUT
 	GPIOSetDir(DAC1EN_PIN/32, DAC1EN_PIN%32, 1);
-	//LPC_GPIO_PORT->SET0 = (1 << DAC1EN_PIN);	// Default to speaker
-	LPC_GPIO_PORT->CLR0 = (1 << DAC1EN_PIN);	// Default to pin out
+	if (_app_wavegen_output_spkr)
+	{
+		// Speaker output
+		LPC_GPIO_PORT->SET0 = (1 << DAC1EN_PIN);
+	}
+	else
+	{
+		// DAC1 output
+		LPC_GPIO_PORT->CLR0 = (1 << DAC1EN_PIN);
+	}
 
 	// Wait for the QEI switch to exit
 	while (!(button_pressed() & (1 << QEI_SW_PIN)))
 	{
-		// If BUTTON_USER2 is pressed, toggle speaker/DACOUT
-		if (button_pressed() &  ( 1 << BUTTON_USER2))
+		// If CAPT_PAD_0 or BUTTON_USER2 is pressed, toggle speaker/DACOUT
+		if (button_pressed() &  ( 1 << (BUTTON_USE_CAPTOUCH ? CAPT_PAD_1 : BUTTON_USER2)))
 		{
+			_app_wavegen_output_spkr = _app_wavegen_output_spkr ? 0: 1;
 		    // Toggle speaker on DAC GPIO output
 			LPC_GPIO_PORT->NOT0 = (1 << DAC1EN_PIN);
+			// Update the output button accordingly
+			ssd1306_fill_rect(96, 55, 32, 8, 1);
+			if (_app_wavegen_output_spkr)
+			{
+				ssd1306_set_text(97, 56, 0, "0>DAC1", 1);
+			}
+			else
+			{
+				ssd1306_set_text(97, 56, 0, "0>SPKR", 1);
+			}
+			ssd1306_refresh();
+			// Delay to avoid rapid toggling due to noise
+			delay_ms(500);
 		}
 
 		// Check for a scroll request on the QEI
