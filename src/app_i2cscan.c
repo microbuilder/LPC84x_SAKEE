@@ -19,20 +19,8 @@
 #include "app_i2cscan.h"
 #include "gfx.h"
 
-void app_i2cscan_init(void)
+void app_i2cscan_reseti2c(void)
 {
-	ssd1306_clear();
-    ssd1306_refresh();
-
-	// Provide main_clk as function clock to I2C0
-	LPC_SYSCON->I2C0CLKSEL = FCLKSEL_MAIN_CLK;
-
-	// Enable bus clocks to I2C0, SWM
-	LPC_SYSCON->SYSAHBCLKCTRL0 |= (I2C0 | SWM);
-
-	// Configure the SWM
-	LPC_SWM->PINENABLE0 &= ~(I2C0_SCL|I2C0_SDA);
-
 	// Give I2C0 a reset
 	LPC_SYSCON->PRESETCTRL0 &= (I2C0_RST_N);
 	LPC_SYSCON->PRESETCTRL0 |= ~(I2C0_RST_N);
@@ -56,6 +44,28 @@ void app_i2cscan_init(void)
 	LPC_I2C0->CFG = CFG_MSTENA;
 }
 
+void app_i2cscan_init(void)
+{
+	ssd1306_clear();
+    ssd1306_refresh();
+
+	// Provide main_clk as function clock to I2C0
+	LPC_SYSCON->I2C0CLKSEL = FCLKSEL_MAIN_CLK;
+
+	// Enable bus clocks to I2C0, SWM and IOCON
+	LPC_SYSCON->SYSAHBCLKCTRL0 |= (I2C0 | SWM | IOCON);
+
+	// Configure the SWM
+	LPC_SWM->PINENABLE0 &= ~(I2C0_SCL|I2C0_SDA);
+
+	// Make sure there are no pullup conflics on 0.10 (SCL) and 0.11 (SDA)
+	LPC_IOCON->PIO0_10 = 1<<7;	 			// No pull-up/down
+	LPC_IOCON->PIO0_11 = 1<<7;	 			// No pull-up/down
+
+	// Give I2C a reset
+	app_i2cscan_reseti2c();
+}
+
 int app_i2cscan_check_addr(uint8_t addr)
 {
     // Wait for the master state to be idle
@@ -76,6 +86,7 @@ int app_i2cscan_check_addr(uint8_t addr)
     if((LPC_I2C0->STAT & MASTER_STATE_MASK) != I2C_STAT_MSTST_TX) {
     	// Error!
 	    LPC_I2C0->MSTCTL = CTL_MSTSTOP;                // Send a stop to end the transaction
+	    app_i2cscan_reseti2c();
 		return -1;
     }
 
