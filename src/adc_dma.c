@@ -257,7 +257,7 @@ void adc_dma_start(void)
  * @param high
  * @param mode 0 = disabled, 1 = outside threshold, 2 = crossing threshold
  */
-void adc_dma_start_with_threshold(uint16_t low, uint16_t high, uint8_t mode)
+int32_t adc_dma_start_with_threshold(uint16_t low, uint16_t high, uint8_t mode, uint8_t cancel_on_btn)
 {
   // If DMA is busy, wait until it is finished
   while ( adc_dma_busy() ) { }
@@ -274,7 +274,7 @@ void adc_dma_start_with_threshold(uint16_t low, uint16_t high, uint8_t mode)
   NVIC_EnableIRQ(ADC_THCMP_IRQn);
 
   // blocking wait for threshold event
-  // TODO add timeout
+  // Exits on button press is requested
   while ( _adc_dma_trigger_offset < 0 )
   {
     cfg_dma_xfer(DMA_BUFFER_SIZE);
@@ -283,7 +283,17 @@ void adc_dma_start_with_threshold(uint16_t low, uint16_t high, uint8_t mode)
     enable_sample_timer();
 
     // Wait until DMA is finished
-    while ( adc_dma_busy() ) { }
+    while ( adc_dma_busy() )
+    {
+    	if (cancel_on_btn)
+    	{
+    		if (button_pressed())
+    		{
+    			disable_sample_timer();
+    			return -1;
+    		}
+    	}
+    }
   }
 
   // Get another 1K sample if the trigger occurs
@@ -316,6 +326,8 @@ void adc_dma_start_with_threshold(uint16_t low, uint16_t high, uint8_t mode)
     // Start sampling using hardware timer
     enable_sample_timer();
   }
+
+  return 0;
 }
 
 void adc_dma_stop(void)

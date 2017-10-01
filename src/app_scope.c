@@ -127,7 +127,7 @@ void app_scope_render_waveform(int16_t sample, int32_t offset_us)
 
 	// Render the title bars
 	ssd1306_set_text(0, 0, 1, "LPC SAKEE", 1);
-	ssd1306_set_text(127 - 48, 0, 1, "WAVEFORM", 1);	// 48 pixels wide
+    ssd1306_set_text(127-72, 0, 1, "OSCILLOSCOPE", 1);	// 72 pixels wide
 
 	// Render AD/DC coupling indicator
 	ssd1306_set_text(127-18, 8, 1, _app_scope_coupling ? "AC" : "DC", 1);
@@ -194,14 +194,13 @@ void app_scope_arm_trigger(void)
 
 	// Render the title bars
     ssd1306_set_text(0, 0, 1, "LPC SAKEE", 1);
-    ssd1306_set_text(127-48, 0, 1, "WAVEFORM", 1);	// 48 pixels wide
-
-    // Render the bottom button options
-	ssd1306_fill_rect(0, 55, 128, 8, 1);
-    //ssd1306_set_text(96, 56, 0, "STOP", 1);
+    ssd1306_set_text(127-72, 0, 1, "OSCILLOSCOPE", 1);	// 72 pixels wide
 
 	ssd1306_set_text(6, 16, 1,  "WAITING FOR", 2);
 	ssd1306_set_text(6, 32, 1, "ADC TRIGGER", 2);
+
+    // Render the bottom button options
+	ssd1306_set_text(14, 56, 1, "PRESS SEL TO CANCEL", 1);
 
     ssd1306_refresh();
 
@@ -212,7 +211,14 @@ void app_scope_arm_trigger(void)
 	{
 	  // Start sampling with threshold detection (low, high, mode)
 	  // interrupt mode: 0 = disabled, 1 = outside threshold, 2 = crossing threshold
-	  adc_dma_start_with_threshold(_app_scope_thresh_l, _app_scope_thresh_h, 2);
+	  // Note: This is a blocking call, so enable cancel with button (last argument = 1)
+	  int32_t res = adc_dma_start_with_threshold(_app_scope_thresh_l, _app_scope_thresh_h, 2, 1);
+	  if (res == -1)
+	  {
+		  // The user canceled the request before the trigger fired
+		  // The DMA engine is already stopped in adc_dma_start_with_threshold above
+		  return;
+	  }
 	  sample = adc_dma_get_threshold_sample();
 	  if (sample < 0)
 	  {
@@ -329,7 +335,7 @@ void app_scope_run(void)
 
 	// Render the title bars
     ssd1306_set_text(0, 0, 1, "LPC SAKEE", 1);
-    ssd1306_set_text(127-48, 0, 1, "WAVEFORM", 1);	// 48 pixels wide
+    ssd1306_set_text(127-72, 0, 1, "OSCILLOSCOPE", 1);	// 72 pixels wide
 
     // Render the bottom button options
 	//ssd1306_fill_rect(0, 55, 128, 8, 1);

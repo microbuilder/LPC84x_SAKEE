@@ -11,7 +11,7 @@
 #ifndef BUTTON_H_
 #define BUTTON_H_
 
-#define BUTTON_USE_CAPTOUCH     1
+#define BUTTON_USE_CAPTOUCH     0
 
 #define CAPT_PAD_0    0
 #define CAPT_PAD_1    1
