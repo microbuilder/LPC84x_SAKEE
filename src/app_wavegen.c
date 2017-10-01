@@ -150,7 +150,7 @@ void app_wavegen_uart_read_waveform(void)
 		// VDD-1.5V restriction warning
 		if (i > APP_WAVEGEN_MAX_DAC_INPUT)
 		{
-			printf("WARNING: 1.8V limit exceeeded, trimming value to %d", APP_WAVEGEN_MAX_DAC_INPUT);
+			printf("WARNING: 1.8V limit exceeded, trimming value to %d", APP_WAVEGEN_MAX_DAC_INPUT);
 			i = APP_WAVEGEN_MAX_DAC_INPUT;
 		}
 
@@ -187,11 +187,7 @@ void app_wavegen_render_upload(void)
     ssd1306_set_text(0, 36, 1, "VALUES (0..1023).", 1);
 
 	// Render the bottom button options
-	ssd1306_fill_rect(0, 55, 31, 8, 1);
-	ssd1306_fill_rect(32, 55, 31, 8, 1);
-	ssd1306_fill_rect(64, 55, 31, 8, 1);
-	ssd1306_fill_rect(96, 55, 32, 8, 1);
-	ssd1306_set_text(101, 56, 0, "EXIT", 1);
+    ssd1306_set_text(16, 55, 1, "CLICK FOR MAIN MENU", 1);
 
 	// Display the screen contents
 	ssd1306_refresh();
@@ -214,24 +210,7 @@ void app_wavegen_render_setup(void)
   // Render the title bars
   ssd1306_set_text(0, 0, 1, "LPC SAKEE", 1);
   ssd1306_set_text(127 - 60, 0, 1, "DAC WAVEGEN", 1);
-  //ssd1306_set_text(16, 55, 0, "CLICK FOR MAIN MENU", 1);
-
-  // Render the bottom button options
-  ssd1306_fill_rect(0, 55, 31, 8, 1);
-  ssd1306_fill_rect(32, 55, 31, 8, 1);
-  ssd1306_fill_rect(64, 55, 31, 8, 1);
-  ssd1306_fill_rect(96, 55, 32, 8, 1);
-  // FREQ switch
-  ssd1306_set_text(1, 56, 0, "0: Hz", 1);
-  // DAC/Speaker switch
-  if (_app_wavegen_output_spkr)
-  {
-	  ssd1306_set_text(97, 56, 0, "1:DAC1", 1);
-  }
-  else
-  {
-	  ssd1306_set_text(97, 56, 0, "1:SPKR", 1);
-  }
+  ssd1306_set_text(16, 55, 1, "CLICK FOR MAIN MENU", 1);
 
   // Render the graticule and waveform
   gfx_graticule(0, 16, &grcfg, 1);
@@ -272,11 +251,130 @@ void app_wavegen_render_setup(void)
   ssd1306_refresh();
 }
 
+int32_t app_wavegen_config_screen(void)
+{
+	enum
+	{
+		APP_WAVEGEN_CONFIG_FREQ = 0,
+		APP_WAVEGEN_CONFIG_DACOUT,
+		APP_WAVEGEN_CONFIG_SPKROUT,
+		APP_WAVEGEN_CONFIG_USER,
+		APP_WAVEGEN_CONFIG_CANCEL,
+		APP_WAVEGEN_CONFIG_LAST,
+	};
+
+	int32_t menu_selected = APP_WAVEGEN_CONFIG_DACOUT;
+
+	// Reset the QEI encoder position counter
+	int32_t last_position_qei = 0;
+	qei_reset_step();
+
+	ssd1306_clear();
+
+	// Render the title bars
+	ssd1306_set_text(0, 0, 1, "LPC SAKEE", 1);
+	ssd1306_set_text(127 - 60, 0, 1, "DAC WAVEGEN", 1);
+	ssd1306_set_text(15, 55, 1, "SELECT TO CONTINUE", 1);
+
+	// Render the config menu options
+    ssd1306_set_text(10, 12, 1, "SET OUTPUT FREQ", 1);
+    ssd1306_set_text(10, 20, 1, "START W/DAC0 OUT", 1);
+    ssd1306_set_text(10, 28, 1, "START W/SPKR OUT", 1);
+    ssd1306_set_text(10, 36, 1, "UPLOAD USER WFORM", 1);
+    ssd1306_set_text(10, 44, 1, "CANCEL", 1);
+
+    // Draw the initial selection indicator
+    uint8_t y = ((menu_selected + 2) * 8) -2;
+    ssd1306_set_pixel(6, y, 1);
+    ssd1306_set_pixel(5, y-1, 1);
+    ssd1306_set_pixel(5, y, 1);
+    ssd1306_set_pixel(5, y+1, 1);
+    ssd1306_set_pixel(4, y-2, 1);
+    ssd1306_set_pixel(4, y-1, 1);
+    ssd1306_set_pixel(4, y, 1);
+    ssd1306_set_pixel(4, y+1, 1);
+    ssd1306_set_pixel(4, y+2, 1);
+
+	ssd1306_refresh();
+
+    // Wait for the button to execute the selected sub-app
+	while (!(button_pressed() &  ( 1 << QEI_SW_PIN)))
+    {
+		// Check for a scroll request on the QEI
+		int32_t abs = qei_abs_step();
+		if (abs != last_position_qei)
+		{
+			menu_selected += qei_offset_step();
+
+			if (menu_selected < 0)
+			{
+				menu_selected = APP_WAVEGEN_CONFIG_LAST - 1;
+			}
+			if (menu_selected >= APP_WAVEGEN_CONFIG_LAST)
+			{
+				// Roll back to the first menu item
+				menu_selected = 0;
+			}
+
+			// Track the position
+			last_position_qei = abs;
+
+			// Update the display
+			ssd1306_fill_rect(4, 12, 3, 52, 0);
+		    y = ((menu_selected + 2) * 8) -2;
+		    ssd1306_set_pixel(6, y, 1);
+		    ssd1306_set_pixel(5, y-1, 1);
+		    ssd1306_set_pixel(5, y, 1);
+		    ssd1306_set_pixel(5, y+1, 1);
+		    ssd1306_set_pixel(4, y-2, 1);
+		    ssd1306_set_pixel(4, y-1, 1);
+		    ssd1306_set_pixel(4, y, 1);
+		    ssd1306_set_pixel(4, y+1, 1);
+		    ssd1306_set_pixel(4, y+2, 1);
+			ssd1306_refresh();
+		}
+
+    	delay_ms(1);
+    }
+
+	switch (menu_selected)
+	{
+	case APP_WAVEGEN_CONFIG_FREQ:
+		// ToDo: Update frequency on dedicated config page!
+		_app_wavegen_frequency_hz = APP_WAVEGEN_RATE_1000_HZ;
+		break;
+	case APP_WAVEGEN_CONFIG_DACOUT:
+		// Start with DAC0 output
+		_app_wavegen_output_spkr = 0;
+		break;
+	case APP_WAVEGEN_CONFIG_SPKROUT:
+		// Start with SPKR output
+		_app_wavegen_output_spkr = 1;
+		break;
+	case APP_WAVEGEN_CONFIG_USER:
+		app_wavegen_render_upload();
+		app_wavegen_uart_read_waveform();
+		break;
+	case APP_WAVEGEN_CONFIG_CANCEL:
+	default:
+		return -1;
+	}
+
+return 0;
+}
+
 void app_wavegen_run(void)
 {
-	//app_wavegen_render_upload();
-	//app_wavegen_uart_read_waveform();
+	// First run the config screen
+	int32_t res = app_wavegen_config_screen();
+	if (res == -1)
+	{
+		// User requests CANCEL/EXIT
+		// To back to the main menu
+		return;
+	}
 
+	// Then go to the waveform output display
 	app_wavegen_render_setup();
 
 	// Reset the QEI encoder position counter
@@ -308,16 +406,6 @@ void app_wavegen_run(void)
 			_app_wavegen_output_spkr = _app_wavegen_output_spkr ? 0: 1;
 		    // Toggle speaker on DAC GPIO output
 			LPC_GPIO_PORT->NOT0 = (1 << DAC1EN_PIN);
-			// Update the output button
-			ssd1306_fill_rect(96, 55, 32, 8, 1);
-			if (_app_wavegen_output_spkr)
-			{
-				ssd1306_set_text(97, 56, 0, "1:DAC1", 1);
-			}
-			else
-			{
-				ssd1306_set_text(97, 56, 0, "1:SPKR", 1);
-			}
 			// Update output label
 			ssd1306_fill_rect(70, 40, 55, 8, 0);
 			ssd1306_set_text(70, 40, 1, _app_wavegen_output_spkr ? "SPKR OUT" : "DAC1 OUT", 1);
