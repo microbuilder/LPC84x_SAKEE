@@ -44,7 +44,7 @@ typedef enum
 } app_wavegen_wave_t;
 
 static app_wavegen_wave_t _app_wavegen_curwave = APP_WAVEGEN_WAVE_SINE;
-static uint16_t _app_wavegen_frequency_hz = 800;
+static uint16_t _app_wavegen_frequency_hz = 200;
 static uint8_t _app_wavegen_output_spkr = 0;
 
 static const uint16_t app_wavegen_sine_wave[64] = {
