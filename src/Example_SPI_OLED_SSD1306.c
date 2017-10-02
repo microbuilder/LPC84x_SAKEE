@@ -132,11 +132,11 @@ int main(void)
 	GPIOSetDir(LED_PIN/32, LED_PIN%32, 1);
 	led_off();
 
-	// Initialize the QEI switch pin and and other input buttons
-	button_init();
-
 	// Initialize the quadrature decoder
 	qei_init();
+
+	// Initialize the QEI switch pin and and other input buttons
+	button_init();
 
 	// Initialize the SSD1306 display
 	ssd1306_init();

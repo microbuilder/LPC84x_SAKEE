@@ -43,8 +43,8 @@
 
 #include "swm.h"
 
-#define VERSION_MAJOR             (0)
-#define VERSION_MINOR             (5)
+#define VERSION_MAJOR             (1)
+#define VERSION_MINOR             (0)
 #define VERSION_REVISION          (0)
 
 #define MV_PER_LSB    		      (3300.0F / 0xFFF)	// 3.3V VREF

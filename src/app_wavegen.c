@@ -298,6 +298,8 @@ void app_wavegen_config_set_hz(void)
 			gfx_printdec(40, 24, (int32_t)_app_wavegen_frequency_hz, 2, 1);
 		    ssd1306_set_text(40, 24, 1, "     Hz", 2);
 			ssd1306_refresh();
+			// Track the position
+			last_position_qei = abs;
 		}
     }
 

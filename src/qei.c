@@ -29,6 +29,8 @@ extern volatile int32_t _qei_step;
 
 #endif
 
+static volatile int32_t _qei_last_value = 0;
+
 uint8_t qei_read_a(void)
 {
   return bit_test(LPC_GPIO_PORT->PIN[PIN_A_PORT], PIN_A_BIT);
@@ -55,11 +57,9 @@ void qei_reset_step_val (int32_t value)
 
 int32_t qei_offset_step (void)
 {
-  static int32_t last_value = 0;
+  int32_t ret = qei_abs_step() - _qei_last_value;
 
-  int32_t ret = qei_abs_step() - last_value;
-
-  last_value =  qei_abs_step();
+  _qei_last_value =  qei_abs_step();
 
   return ret;
 }
@@ -67,6 +67,7 @@ int32_t qei_offset_step (void)
 void qei_reset_step (void)
 {
   _qei_step = 0;
+  _qei_last_value = 0;
 }
 
 #if !QEI_USE_SCT

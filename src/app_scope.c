@@ -373,6 +373,9 @@ void app_scope_render_set_hz(void)
 				_app_scope_rate = r;
 			}
 
+			// Track the position
+			last_position_qei = abs;
+
 			app_scope_render_hz(40, 24, 1);
 			ssd1306_refresh();
 		}
