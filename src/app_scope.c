@@ -343,7 +343,7 @@ void app_scope_render_set_hz(void)
 	app_scope_render_header();
 	ssd1306_set_text(15, 55, 1, "SELECT TO CONTINUE", 1);
 
-	ssd1306_set_text(0, 12, 1, "SET INPUT FREQUENCY (Hz)", 1);
+	ssd1306_set_text(0, 12, 1, "SET SAMPLE FREQUENCY (Hz)", 1);
 	app_scope_render_hz(40, 24, 1);
 	ssd1306_refresh();
 
