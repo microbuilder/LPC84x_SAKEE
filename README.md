@@ -28,7 +28,11 @@ Code Bundle, including the following projects:
 - `peripherals_lib`
 - `common`
 
-The project should be located at the same level as the above projects.
+For convenience sake, .zip files of these libraries are included in the
+`libs` folder, but more recent versions may be available from NXP.
+
+The project should be located at the same level as the above library
+projects.
 
 ## Related Links
 
