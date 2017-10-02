@@ -28,8 +28,11 @@
 // 3300mV / 1024 = 3.22265625mV per lsb
 #define APP_WAVEGEN_MAX_DAC_INPUT	(558)
 
-#define APP_WAVEGEN_HZ_MIN          (10)
-#define APP_WAVEGEN_HZ_MAX          (1000)
+// Beyond about 800Hz the DAC IRQ fires too rapidly (<200 ticks)
+// and overwhelms the rest of the system at the default clock
+// speed. The clock will need to be raised to go beyond 800Hz.
+#define APP_WAVEGEN_HZ_MIN          (100)
+#define APP_WAVEGEN_HZ_MAX          (800)
 
 typedef enum
 {
@@ -41,9 +44,8 @@ typedef enum
 } app_wavegen_wave_t;
 
 static app_wavegen_wave_t _app_wavegen_curwave = APP_WAVEGEN_WAVE_SINE;
-static uint16_t _app_wavegen_frequency_hz = 200;
+static uint16_t _app_wavegen_frequency_hz = 800;
 static uint8_t _app_wavegen_output_spkr = 0;
-
 
 static const uint16_t app_wavegen_sine_wave[64] = {
 	279, 306, 333, 360, 386, 411, 434, 456,
@@ -246,7 +248,7 @@ void app_wavegen_render_setup(void)
   }
 
   // Render some labels
-  ssd1306_set_text(70, 24, 1, "FREQ", 1); // 500 Hz", 1);
+  ssd1306_set_text(70, 24, 1, "FREQ", 1);
   gfx_printdec(94, 24, _app_wavegen_frequency_hz, 1, 1);
   ssd1306_set_text(94+(gfx_num_digits(_app_wavegen_frequency_hz)*6), 24, 1, "Hz", 1);
   ssd1306_set_text(70, 32, 1, "AMPL 1.8 V", 1);
@@ -255,7 +257,7 @@ void app_wavegen_render_setup(void)
   ssd1306_refresh();
 }
 
-int16_t app_wavegen_config_set_hz(void)
+void app_wavegen_config_set_hz(void)
 {
 	// Reset the QEI encoder position counter
 	int32_t last_position_qei = 0;
@@ -299,7 +301,11 @@ int16_t app_wavegen_config_set_hz(void)
 		}
     }
 
-	return _app_wavegen_frequency_hz;
+	// Wait for the button to release
+	while ((button_pressed() &  ( 1 << QEI_SW_PIN)))
+	{
+		delay_ms(10);
+	}
 }
 
 int32_t app_wavegen_config_screen(void)

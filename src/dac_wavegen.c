@@ -22,6 +22,7 @@
 
 uint16_t const* _sample_data  = NULL;
 uint32_t        _sample_count = 0;
+uint32_t        _dac_wavegen_isr_counter = 0;
 
 void dac_wavegen_init(uint8_t dac_id)
 {
@@ -45,6 +46,9 @@ void dac_wavegen_init(uint8_t dac_id)
     GPIOSetBitValue(AUDIO_AMP_ENABLE_PORT, AUDIO_AMP_ENABLE_PIN, 1);
   }
 
+  // Lower the NVIC priority (default = 0)
+  NVIC_SetPriority(dac_id ? DAC1_IRQn : DAC0_IRQn, 2);
+
   // Enable DACOUT on its pin
   LPC_SWM->PINENABLE0 &= ~( dac_id ? DACOUT1 : DACOUT0);
 
@@ -65,7 +69,8 @@ void dac_wavegen_run(uint8_t dac_id, uint16_t const samples[], uint32_t count, u
 
   // Configure the 16-bit DAC counter with an initial Freq.
   // SamplesPerCycle * Freq = samples/sec
-  lpc_adc->CNTVAL = (system_ahb_clk)/(count * freq) - 1;
+  uint32_t cntval = (system_ahb_clk)/(count * freq) - 1;
+  lpc_adc->CNTVAL = cntval;
 
   // Power to the DAC!
   LPC_SYSCON->PDRUNCFG &= ~(dac_id ? DAC1_PD : DAC0_PD);
@@ -84,9 +89,12 @@ void dac_wavegen_stop(uint8_t dac_id)
   Disable_Periph_Clock(dac_id ? CLK_DAC1 : CLK_DAC0);
 }
 
-void dac_irq(uint8_t dac_id)
+void DAC0_IRQHandler(void)
 {
-  LPC_DAC_TypeDef* lpc_adc = (dac_id ? LPC_DAC1 : LPC_DAC0);
+  LPC_DAC_TypeDef* lpc_adc = LPC_DAC0;
+
+  // For debug purposes
+  _dac_wavegen_isr_counter++;
 
   static uint32_t idx = 0;
 
@@ -99,13 +107,20 @@ void dac_irq(uint8_t dac_id)
   lpc_adc->CR = (_sample_data[idx++] << 6) & 0x0000FFFF;
 }
 
-
-void DAC0_IRQHandler(void)
-{
-  dac_irq(0);
-}
-
 void DAC1_IRQHandler(void)
 {
-  dac_irq(1);
+  LPC_DAC_TypeDef* lpc_adc = LPC_DAC1;
+
+  // For debug purposes
+  _dac_wavegen_isr_counter++;
+
+  static uint32_t idx = 0;
+
+  if (_sample_data == NULL || _sample_count == 0 ) return;
+
+  if (idx >= _sample_count) idx = 0;
+
+  // ToDo: We need to shift the DAC values 6 bits for now ...
+  // adjust the lookup tables to be pre-shifted instead!
+  lpc_adc->CR = (_sample_data[idx++] << 6) & 0x0000FFFF;
 }
