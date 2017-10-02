@@ -21,18 +21,33 @@
 
 #define APP_SCOPE_WAVEFORM_RENDER_AS_BAR	(0)	// Set this to 1 to render waveform with solid bars from bottom to sample height
 
-app_scope_rate_t _app_scope_rate;
+app_scope_rate_t _app_scope_rate = APP_SCOPE_RATE_100_KHZ;
 uint16_t         _app_scope_thresh_l = (uint16_t)(1001/MV_PER_LSB); // Default lower threshold in lsb
 uint16_t         _app_scope_thresh_h = (uint16_t)(1100/MV_PER_LSB); // Default upper threshold in lsb
 uint8_t          _app_scope_coupling = 0;		// 0 = DC, 1 = AC (default = DC)
 uint8_t          _app_scope_vdiv = 0;           // 0 = No input divider, 1 = Enable the 0.787X voltage divider
+int32_t          _app_scope_rate_lookup[16][2] = { { APP_SCOPE_RATE_10_HZ,   100000 },
+		                                           { APP_SCOPE_RATE_25_HZ,   40000 },
+		                                           { APP_SCOPE_RATE_50_HZ,   20000 },
+		                                           { APP_SCOPE_RATE_60_HZ,   16666 },
+		                                           { APP_SCOPE_RATE_100_HZ,  10000 },
+		                                           { APP_SCOPE_RATE_250_HZ,  4000 },
+		                                           { APP_SCOPE_RATE_500_HZ,  2000 },
+		                                           { APP_SCOPE_RATE_1_KHZ,   1000 },
+		                                           { APP_SCOPE_RATE_2_5_KHZ, 400 },
+		                                           { APP_SCOPE_RATE_5_KHZ,   200 },
+		                                           { APP_SCOPE_RATE_10_KHZ,  100 },
+		                                           { APP_SCOPE_RATE_25_KHZ,  40 },
+		                                           { APP_SCOPE_RATE_50_KHZ,  20 },
+		                                           { APP_SCOPE_RATE_100_KHZ, 10 },
+		                                           { APP_SCOPE_RATE_250_KHZ, 4 },
+		                                           { APP_SCOPE_RATE_500_KHZ, 2 } };
 
-void app_scope_init(app_scope_rate_t rate)
+void app_scope_init(void)
 {
 	// Initialize the DMA and MRT based ADC sampler
 	adc_dma_init();
-	_app_scope_rate = rate;
-	adc_dma_set_rate(rate); // Set the ADC default sample rate in microseconds
+	adc_dma_set_rate(_app_scope_rate_lookup[_app_scope_rate][1]); // Set the ADC default sample rate in microseconds
 
 	// Analog front end setup
 	GPIOSetDir(AN_IN_VREF_3_3V_0_971V/32, AN_IN_VREF_3_3V_0_971V%32, 1); /* 3.3V or 0.971V VRef (240K + 100K divider) */
@@ -112,6 +127,13 @@ void app_scope_init(app_scope_rate_t rate)
 	ssd1306_refresh();
 }
 
+void app_scope_render_header(void)
+{
+	ssd1306_clear();
+    ssd1306_set_text(0, 0, 1, "LPC SAKEE", 1);
+    ssd1306_set_text(127-72, 0, 1, "OSCILLOSCOPE", 1);	// 72 pixels wide
+}
+
 void app_scope_render_waveform(int16_t sample, int32_t offset_us)
 {
 	gfx_graticule_cfg_t grcfg =
@@ -123,11 +145,8 @@ void app_scope_render_waveform(int16_t sample, int32_t offset_us)
 	  .block_spacing = 8	// Each block is 8x8 pixels
 	};
 
-	ssd1306_clear();
-
 	// Render the title bars
-	ssd1306_set_text(0, 0, 1, "LPC SAKEE", 1);
-    ssd1306_set_text(127-72, 0, 1, "OSCILLOSCOPE", 1);	// 72 pixels wide
+	app_scope_render_header();
 
 	// Render AD/DC coupling indicator
 	ssd1306_set_text(127-18, 8, 1, _app_scope_coupling ? "AC" : "DC", 1);
@@ -190,11 +209,7 @@ void app_scope_arm_trigger(void)
 	static int32_t last_position_qei = 0;
 	int16_t sample = 0;
 
-	ssd1306_clear();
-
-	// Render the title bars
-    ssd1306_set_text(0, 0, 1, "LPC SAKEE", 1);
-    ssd1306_set_text(127-72, 0, 1, "OSCILLOSCOPE", 1);	// 72 pixels wide
+	app_scope_render_header();
 
 	ssd1306_set_text(6, 16, 1,  "WAITING FOR", 2);
 	ssd1306_set_text(6, 32, 1, "ADC TRIGGER", 2);
@@ -259,93 +274,136 @@ void app_scope_arm_trigger(void)
 	}
 }
 
-void app_scope_render_threshold(uint16_t low, uint16_t high)
+void app_scope_render_hz(uint8_t x, uint8_t y, uint8_t color)
 {
-	ssd1306_fill_rect(0, 24, 128, 31, 0);
-    float lower_v = MV_PER_LSB * (float)low;
-    float upper_v = MV_PER_LSB * (float)high;
-    ssd1306_set_text(0, 28, 1,  "TRIG L:", 1);
-    ssd1306_set_text(0, 44, 1,  "TRIG H:", 1);
-	gfx_printdec(40, 24, (int32_t)lower_v, 2, 1);
-	gfx_printdec(40, 40, (int32_t)upper_v, 2, 1);
-    ssd1306_set_text(40, 24, 1, "     mV", 2);
-    ssd1306_set_text(40, 40, 1, "     mV", 2);
-}
+	ssd1306_fill_rect(x, y, 128-x, 15, color ? 0 : 1);
 
-void app_scope_render_rate(app_scope_rate_t rate)
-{
-	ssd1306_fill_rect(0, 12, 128, 16, 0);
-    ssd1306_set_text(0, 12, 1, "RATE:", 1);
-    switch(rate)
+    switch(_app_scope_rate)
     {
     case APP_SCOPE_RATE_500_KHZ:
-        ssd1306_set_text(40, 8, 1, "500  kHz", 2);
+        ssd1306_set_text(x, y, color, "500  kHz", 2);
     	break;
     case APP_SCOPE_RATE_250_KHZ:
-        ssd1306_set_text(40, 8, 1, "250  kHz", 2);
+        ssd1306_set_text(x, y, color, "250  kHz", 2);
     	break;
     case APP_SCOPE_RATE_100_KHZ:
-        ssd1306_set_text(40, 8, 1, "100  kHz", 2);
+        ssd1306_set_text(x, y, color, "100  kHz", 2);
     	break;
     case APP_SCOPE_RATE_50_KHZ:
-        ssd1306_set_text(40, 8, 1, "50   kHz", 2);
+        ssd1306_set_text(x, y, color, "50   kHz", 2);
     	break;
     case APP_SCOPE_RATE_25_KHZ:
-        ssd1306_set_text(40, 8, 1, "25   kHz", 2);
+        ssd1306_set_text(x, y, color, "25   kHz", 2);
     	break;
     case APP_SCOPE_RATE_10_KHZ:
-        ssd1306_set_text(40, 8, 1, "10   kHz", 2);
+        ssd1306_set_text(x, y, color, "10   kHz", 2);
     	break;
     case APP_SCOPE_RATE_5_KHZ:
-        ssd1306_set_text(40, 8, 1, "5    kHz", 2);
+        ssd1306_set_text(x, y, color, "5    kHz", 2);
     	break;
     case APP_SCOPE_RATE_2_5_KHZ:
-        ssd1306_set_text(40, 8, 1, "2.5  kHz", 2);
+        ssd1306_set_text(x, y, color, "2.5  kHz", 2);
     	break;
     case APP_SCOPE_RATE_1_KHZ:
-        ssd1306_set_text(40, 8, 1, "1    kHz", 2);
+        ssd1306_set_text(x, y, color, "1    kHz", 2);
     	break;
     case APP_SCOPE_RATE_500_HZ:
-        ssd1306_set_text(40, 8, 1, "500  Hz", 2);
+        ssd1306_set_text(x, y, color, "500  Hz", 2);
     	break;
     case APP_SCOPE_RATE_250_HZ:
-        ssd1306_set_text(40, 8, 1, "250  Hz", 2);
+        ssd1306_set_text(x, y, color, "250  Hz", 2);
     	break;
     case APP_SCOPE_RATE_100_HZ:
-        ssd1306_set_text(40, 8, 1, "100  Hz", 2);
+        ssd1306_set_text(x, y, color, "100  Hz", 2);
     	break;
     case APP_SCOPE_RATE_60_HZ:
-        ssd1306_set_text(40, 8, 1, "60   Hz", 2);
+        ssd1306_set_text(x, y, color, "60   Hz", 2);
     	break;
     case APP_SCOPE_RATE_50_HZ:
-        ssd1306_set_text(40, 8, 1, "50   Hz", 2);
+        ssd1306_set_text(x, y, color, "50   Hz", 2);
     	break;
     case APP_SCOPE_RATE_25_HZ:
-        ssd1306_set_text(40, 8, 1, "25   Hz", 2);
+        ssd1306_set_text(x, y, color, "25   Hz", 2);
     	break;
     case APP_SCOPE_RATE_10_HZ:
-        ssd1306_set_text(40, 8, 1, "10   Hz", 2);
+        ssd1306_set_text(x, y, color, "10   Hz", 2);
+    	break;
+    case APP_SCOPE_RATE_LAST:
     	break;
     }
 }
 
-void app_scope_run(void)
+void app_scope_render_set_hz(void)
 {
-	ssd1306_clear();
+	// Reset the QEI encoder position counter
+	int32_t last_position_qei = 0;
+	qei_reset_step();
 
 	// Render the title bars
-    ssd1306_set_text(0, 0, 1, "LPC SAKEE", 1);
-    ssd1306_set_text(127-72, 0, 1, "OSCILLOSCOPE", 1);	// 72 pixels wide
+	app_scope_render_header();
+	ssd1306_set_text(15, 55, 1, "SELECT TO CONTINUE", 1);
 
-    // Render the bottom button options
-	//ssd1306_fill_rect(0, 55, 128, 8, 1);
-    //ssd1306_set_text(8, 56, 0, "HOME", 1);
-    //ssd1306_set_text(36, 56, 0, "TIME", 1);
-    //ssd1306_set_text(64, 56, 0, "TRIG", 1);
-    //ssd1306_set_text(96, 56, 0, "RUN", 1);
+	ssd1306_set_text(0, 12, 1, "SET INPUT FREQUENCY (Hz)", 1);
+	app_scope_render_hz(40, 24, 1);
+	ssd1306_refresh();
 
-    // Display the current sample rate
-    app_scope_render_rate(_app_scope_rate);
+    // Wait for the button to execute Hz selection
+	while (!(button_pressed() &  ( 1 << QEI_SW_PIN)))
+    {
+		// Check for a scroll request on the QEI
+		int32_t abs = qei_abs_step();
+		if (abs != last_position_qei)
+		{
+			int32_t r = (int32_t)_app_scope_rate;
+
+			r += qei_offset_step();
+
+			if (r < 0)
+			{
+				// Roll under to the top value
+				_app_scope_rate = APP_SCOPE_RATE_LAST - 1;
+			}
+			else if (r > (APP_SCOPE_RATE_LAST - 1))
+			{
+				// Roll over to the low value
+				_app_scope_rate = 0;
+			}
+			else
+			{
+				_app_scope_rate = r;
+			}
+
+			app_scope_render_hz(40, 24, 1);
+			ssd1306_refresh();
+		}
+    }
+
+	// Adjust the DMA rate
+	adc_dma_set_rate(_app_scope_rate_lookup[_app_scope_rate][1]);
+
+	// Wait for the button to release
+	while ((button_pressed() &  ( 1 << QEI_SW_PIN)))
+	{
+		delay_ms(10);
+	}
+}
+
+void app_scope_render_threshold(uint16_t low, uint16_t high)
+{
+	ssd1306_fill_rect(0, 16, 128, 31, 0);
+    float lower_v = MV_PER_LSB * (float)low;
+    float upper_v = MV_PER_LSB * (float)high;
+    ssd1306_set_text(0, 20, 1,  "TRIG L:", 1);
+    ssd1306_set_text(0, 36, 1,  "TRIG H:", 1);
+	gfx_printdec(40, 16, (int32_t)lower_v, 2, 1);
+	gfx_printdec(40, 32, (int32_t)upper_v, 2, 1);
+    ssd1306_set_text(40, 16, 1, "     mV", 2);
+    ssd1306_set_text(40, 32, 1, "     mV", 2);
+}
+
+void app_scope_render_trig(void)
+{
+	app_scope_render_header();
 
     // Display the current lower/upper thresholds
     app_scope_render_threshold(_app_scope_thresh_l, _app_scope_thresh_h);
@@ -396,7 +454,16 @@ void app_scope_run(void)
 
     	delay_ms(1);
     }
+}
 
-    // Always start trigger for now
+void app_scope_run(void)
+{
+    // Render the trigger selection menu
+    app_scope_render_trig();
+
+    // Render the rate selection menu
+    app_scope_render_set_hz();
+
+    // ARM the trigger
     app_scope_arm_trigger();
 }

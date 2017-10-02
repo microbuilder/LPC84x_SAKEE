@@ -163,8 +163,8 @@ int main(void)
 			app_vm_run();
 			break;
 		case APP_MENU_OPTION_SCOPE:
-			// Init scope at 100kHz
-			app_scope_init(APP_SCOPE_RATE_100_KHZ);
+			// Init scope
+			app_scope_init();
 			app_scope_run();
 			break;
 		case APP_MENU_OPTION_I2CSCANNER:
