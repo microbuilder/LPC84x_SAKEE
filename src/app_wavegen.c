@@ -28,6 +28,9 @@
 // 3300mV / 1024 = 3.22265625mV per lsb
 #define APP_WAVEGEN_MAX_DAC_INPUT	(558)
 
+#define APP_WAVEGEN_HZ_MIN          (10)
+#define APP_WAVEGEN_HZ_MAX          (1000)
+
 typedef enum
 {
 	APP_WAVEGEN_WAVE_SINE = 0,
@@ -38,8 +41,9 @@ typedef enum
 } app_wavegen_wave_t;
 
 static app_wavegen_wave_t _app_wavegen_curwave = APP_WAVEGEN_WAVE_SINE;
-static uint16_t _app_wavegen_frequency_hz = APP_WAVEGEN_RATE_200_HZ;
+static uint16_t _app_wavegen_frequency_hz = 200;
 static uint8_t _app_wavegen_output_spkr = 0;
+
 
 static const uint16_t app_wavegen_sine_wave[64] = {
 	279, 306, 333, 360, 386, 411, 434, 456,
@@ -251,12 +255,58 @@ void app_wavegen_render_setup(void)
   ssd1306_refresh();
 }
 
+int16_t app_wavegen_config_set_hz(void)
+{
+	// Reset the QEI encoder position counter
+	int32_t last_position_qei = 0;
+	qei_reset_step();
+
+	ssd1306_clear();
+
+	// Render the title bars
+	ssd1306_set_text(0, 0, 1, "LPC SAKEE", 1);
+	ssd1306_set_text(127 - 60, 0, 1, "DAC WAVEGEN", 1);
+	ssd1306_set_text(15, 55, 1, "SELECT TO CONTINUE", 1);
+
+	ssd1306_set_text(0, 12, 1, "SET OUTPUT FREQUENCY (Hz)", 1);
+	gfx_printdec(40, 24, (int32_t)_app_wavegen_frequency_hz, 2, 1);
+    ssd1306_set_text(40, 24, 1, "     Hz", 2);
+
+	ssd1306_refresh();
+
+    // Wait for the button to execute the selected sub-app
+	while (!(button_pressed() &  ( 1 << QEI_SW_PIN)))
+    {
+		// Check for a scroll request on the QEI
+		int32_t abs = qei_abs_step();
+		if (abs != last_position_qei)
+		{
+			_app_wavegen_frequency_hz += qei_offset_step();
+			if (_app_wavegen_frequency_hz < APP_WAVEGEN_HZ_MIN)
+			{
+				// Roll under to the top value
+				_app_wavegen_frequency_hz = APP_WAVEGEN_HZ_MAX;
+			}
+			if (_app_wavegen_frequency_hz > APP_WAVEGEN_HZ_MAX)
+			{
+				// Roll over to the low value
+				_app_wavegen_frequency_hz = APP_WAVEGEN_HZ_MIN;
+			}
+			ssd1306_fill_rect(0, 24, 128, 31, 0);
+			gfx_printdec(40, 24, (int32_t)_app_wavegen_frequency_hz, 2, 1);
+		    ssd1306_set_text(40, 24, 1, "     Hz", 2);
+			ssd1306_refresh();
+		}
+    }
+
+	return _app_wavegen_frequency_hz;
+}
+
 int32_t app_wavegen_config_screen(void)
 {
 	enum
 	{
-		APP_WAVEGEN_CONFIG_FREQ = 0,
-		APP_WAVEGEN_CONFIG_DACOUT,
+		APP_WAVEGEN_CONFIG_DACOUT = 0,
 		APP_WAVEGEN_CONFIG_SPKROUT,
 		APP_WAVEGEN_CONFIG_USER,
 		APP_WAVEGEN_CONFIG_CANCEL,
@@ -277,11 +327,10 @@ int32_t app_wavegen_config_screen(void)
 	ssd1306_set_text(15, 55, 1, "SELECT TO CONTINUE", 1);
 
 	// Render the config menu options
-    ssd1306_set_text(10, 12, 1, "SET OUTPUT FREQ", 1);
-    ssd1306_set_text(10, 20, 1, "START W/DAC0 OUT", 1);
-    ssd1306_set_text(10, 28, 1, "START W/SPKR OUT", 1);
-    ssd1306_set_text(10, 36, 1, "UPLOAD USER WFORM", 1);
-    ssd1306_set_text(10, 44, 1, "CANCEL", 1);
+    ssd1306_set_text(10, 12, 1, "START W/DAC0 OUT", 1);
+    ssd1306_set_text(10, 20, 1, "START W/SPEAKER OUT", 1);
+    ssd1306_set_text(10, 28, 1, "UPLOAD USER WAVEFORM", 1);
+    ssd1306_set_text(10, 36, 1, "CANCEL", 1);
 
     // Draw the initial selection indicator
     uint8_t y = ((menu_selected + 2) * 8) -2;
@@ -339,10 +388,6 @@ int32_t app_wavegen_config_screen(void)
 
 	switch (menu_selected)
 	{
-	case APP_WAVEGEN_CONFIG_FREQ:
-		// ToDo: Update frequency on dedicated config page!
-		_app_wavegen_frequency_hz = APP_WAVEGEN_RATE_1000_HZ;
-		break;
 	case APP_WAVEGEN_CONFIG_DACOUT:
 		// Start with DAC0 output
 		_app_wavegen_output_spkr = 0;
@@ -360,7 +405,10 @@ int32_t app_wavegen_config_screen(void)
 		return -1;
 	}
 
-return 0;
+	// Update frequency on dedicated config page
+	app_wavegen_config_set_hz();
+
+	return 0;
 }
 
 void app_wavegen_run(void)
@@ -397,49 +445,7 @@ void app_wavegen_run(void)
 	// Wait for the QEI switch to exit
 	while (!(button_pressed() & (1 << QEI_SW_PIN)))
 	{
-		// Enable the cap touch interrupt
-		capt_nvic_enable();
-
-		// If CAPT_PAD_1 or BUTTON_USER2 is pressed, toggle speaker/DACOUT
-		if (button_pressed() & ( 1 << (BUTTON_USE_CAPTOUCH ? CAPT_PAD_0 : BUTTON_USER2)))
-		{
-			_app_wavegen_output_spkr = _app_wavegen_output_spkr ? 0: 1;
-		    // Toggle speaker on DAC GPIO output
-			LPC_GPIO_PORT->NOT0 = (1 << DAC1EN_PIN);
-			// Update output label
-			ssd1306_fill_rect(70, 40, 55, 8, 0);
-			ssd1306_set_text(70, 40, 1, _app_wavegen_output_spkr ? "SPKR OUT" : "DAC1 OUT", 1);
-			ssd1306_refresh();
-			delay_ms(100);
-		}
-
-		// It CAPT_PAD_0 or BUTTON_USER1 is pressed, change the output rate
-		if (button_pressed() & ( 1 << (BUTTON_USE_CAPTOUCH ? CAPT_PAD_1 : BUTTON_USER1)))
-		{
-			if (_app_wavegen_frequency_hz == APP_WAVEGEN_RATE_1000_HZ)
-			{
-				_app_wavegen_frequency_hz = APP_WAVEGEN_RATE_800_HZ;
-			}
-			else
-			{
-				_app_wavegen_frequency_hz /= 2;
-			}
-			// Check if we need to wrap around to the top of the enum list
-			if (_app_wavegen_frequency_hz < APP_WAVEGEN_RATE_200_HZ)
-			{
-				_app_wavegen_frequency_hz = APP_WAVEGEN_RATE_1000_HZ;
-			}
-			// Delay to avoid rapid toggling due to noise
-			app_wavegen_render_setup();
-			ssd1306_refresh();
-			delay_ms(100);
-		}
-
-		// Disable the cap touch interrupt to avoid problems elsewhere
-		capt_nvic_disable();
-
 		// Check for a scroll request on the QEI
-        // Adjust the trigger level by default if any rotation occurs
 		int32_t abs = qei_abs_step();
 		// Adjust waveform offset on qei scroll
 		if (abs != last_position_qei)

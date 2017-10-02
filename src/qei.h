@@ -21,7 +21,7 @@
 #include "config.h"
 
 // 1 use SCT, 0 use GPIO for QEI encoder
-#define QEI_USE_SCT            1
+#define QEI_USE_SCT            0
 
 void    qei_init           (void);
 
